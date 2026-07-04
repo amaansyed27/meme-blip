@@ -1,7 +1,12 @@
 {
-  "files": [],
   "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
     "noEmit": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "target": "ES2022"
+  },
+  "include": ["app/**/*.jsx", "app/**/*.js", "vite.config.js"]
 }
