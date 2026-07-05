@@ -29,11 +29,12 @@ pub struct AppSettings {
     pub output_device_id: Option<String>,
     pub monitor_device_id: Option<String>,
     pub start_on_boot: bool,
+    pub api_token: String,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
-        Self { output_device_id: None, monitor_device_id: None, start_on_boot: true }
+        Self { output_device_id: None, monitor_device_id: None, start_on_boot: true, api_token: uuid::Uuid::new_v4().to_string() }
     }
 }
 
@@ -49,8 +50,32 @@ pub struct AssignHotkeyRequest {
     pub hotkey: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateSoundRequest {
+    pub name: Option<String>,
+    pub board: Option<String>,
+    pub key: Option<String>,
+    pub volume: Option<u8>,
+    pub color: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HealthResponse {
     pub ok: bool,
     pub version: &'static str,
+    pub api_token: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateStatus {
+    pub current_version: String,
+    pub latest_version: Option<String>,
+    pub update_available: bool,
+    pub release_url: Option<String>,
+    pub asset_name: Option<String>,
+    pub asset_url: Option<String>,
+    pub downloaded_path: Option<String>,
 }
