@@ -1,42 +1,107 @@
 import { create } from 'zustand';
-import { starterSounds, boards, devices } from '../data/seedData.js';
+import { companionClient } from '../services/companionClient.js';
+
+function slugBoardName(name) {
+  return name.toLowerCase().split(' ').join('-');
+}
+
+function deriveBoards(sounds) {
+  const counts = new Map();
+  for (const sound of sounds) {
+    const name = sound.board || 'Meme Kit';
+    counts.set(name, (counts.get(name) || 0) + 1);
+  }
+  return Array.from(counts.entries()).map(([name, sounds], index) => ({
+    id: `board-${slugBoardName(name)}`,
+    name,
+    sounds,
+    mode: name.toLowerCase().includes('meeting') ? 'Meetings' : 'Custom',
+    accent: ['mint', 'blue', 'gold'][index % 3]
+  }));
+}
 
 export const useMemeBlipStore = create((set, get) => ({
   route: 'dashboard',
   query: '',
-  companionOnline: true,
+  companionOnline: false,
+  loading: true,
+  error: null,
   muted: false,
   activeSoundId: null,
-  selectedDeviceId: 'd2',
-  monitorDeviceId: 'd1',
-  sounds: starterSounds,
-  boards,
-  devices,
+  selectedDeviceId: null,
+  monitorDeviceId: null,
+  sounds: [],
+  boards: [],
+  devices: [],
   setRoute: (route) => set({ route }),
   setQuery: (query) => set({ query }),
-  setSelectedDevice: (selectedDeviceId) => set({ selectedDeviceId }),
+  initialize: async () => {
+    set({ loading: true, error: null });
+    try {
+      const health = await companionClient.health();
+      const sounds = await companionClient.sounds();
+      const devices = await companionClient.devices();
+      const settings = await companionClient.settings();
+      set({
+        companionOnline: Boolean(health.ok),
+        sounds,
+        boards: deriveBoards(sounds),
+        devices,
+        selectedDeviceId: settings.outputDeviceId || null,
+        monitorDeviceId: settings.monitorDeviceId || null,
+        loading: false
+      });
+    } catch (error) {
+      set({ companionOnline: false, loading: false, error: error.message });
+    }
+  },
+  setSelectedDevice: async (selectedDeviceId) => {
+    set({ selectedDeviceId });
+    try {
+      await companionClient.setOutputDevice(selectedDeviceId);
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
   setMonitorDevice: (monitorDeviceId) => set({ monitorDeviceId }),
   toggleMute: () => set((state) => ({ muted: !state.muted })),
-  playSound: (id) => {
+  playSound: async (id) => {
     if (get().muted) return;
-    set({ activeSoundId: id });
-    window.setTimeout(() => {
-      if (get().activeSoundId === id) set({ activeSoundId: null });
-    }, 900);
+    set({ activeSoundId: id, error: null });
+    try {
+      await companionClient.play(id);
+      window.setTimeout(() => {
+        if (get().activeSoundId === id) set({ activeSoundId: null });
+      }, 900);
+    } catch (error) {
+      set({ activeSoundId: null, error: error.message });
+    }
   },
-  stopAll: () => set({ activeSoundId: null }),
-  addDemoSound: () => set((state) => ({
-    sounds: [
-      {
-        id: `s${state.sounds.length + 1}`,
-        name: 'New Clip',
-        board: 'Meme Kit',
-        key: 'Unassigned',
-        volume: 70,
-        duration: '1.0s',
-        color: 'mint'
-      },
-      ...state.sounds
-    ]
-  }))
+  stopAll: async () => {
+    set({ activeSoundId: null });
+    try {
+      await companionClient.stopAll();
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
+  importSound: async (file) => {
+    set({ error: null });
+    try {
+      const sound = await companionClient.importSound({ file, board: 'Meme Kit', volume: 80 });
+      const sounds = [sound, ...get().sounds];
+      set({ sounds, boards: deriveBoards(sounds) });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
+  deleteSound: async (id) => {
+    try {
+      await companionClient.deleteSound(id);
+      const sounds = get().sounds.filter((sound) => sound.id !== id);
+      set({ sounds, boards: deriveBoards(sounds) });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  }
 }));
