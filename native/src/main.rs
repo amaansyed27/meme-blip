@@ -5,6 +5,7 @@ mod models;
 mod settings;
 mod storage;
 mod tray;
+mod updater;
 
 use anyhow::Result;
 use audio::AudioEngine;
