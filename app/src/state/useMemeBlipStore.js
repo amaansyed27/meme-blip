@@ -20,6 +20,10 @@ function deriveBoards(sounds) {
   }));
 }
 
+function applySoundUpdate(list, updated) {
+  return list.map((sound) => sound.id === updated.id ? updated : sound);
+}
+
 export const useMemeBlipStore = create((set, get) => ({
   route: 'dashboard',
   query: '',
@@ -30,6 +34,7 @@ export const useMemeBlipStore = create((set, get) => ({
   activeSoundId: null,
   selectedDeviceId: null,
   monitorDeviceId: null,
+  updateStatus: null,
   sounds: [],
   boards: [],
   devices: [],
@@ -57,11 +62,7 @@ export const useMemeBlipStore = create((set, get) => ({
   },
   setSelectedDevice: async (selectedDeviceId) => {
     set({ selectedDeviceId });
-    try {
-      await companionClient.setOutputDevice(selectedDeviceId);
-    } catch (error) {
-      set({ error: error.message });
-    }
+    try { await companionClient.setOutputDevice(selectedDeviceId); } catch (error) { set({ error: error.message }); }
   },
   setMonitorDevice: (monitorDeviceId) => set({ monitorDeviceId }),
   toggleMute: () => set((state) => ({ muted: !state.muted })),
@@ -79,11 +80,7 @@ export const useMemeBlipStore = create((set, get) => ({
   },
   stopAll: async () => {
     set({ activeSoundId: null });
-    try {
-      await companionClient.stopAll();
-    } catch (error) {
-      set({ error: error.message });
-    }
+    try { await companionClient.stopAll(); } catch (error) { set({ error: error.message }); }
   },
   importSound: async (file) => {
     set({ error: null });
@@ -95,11 +92,48 @@ export const useMemeBlipStore = create((set, get) => ({
       set({ error: error.message });
     }
   },
+  updateSound: async (id, patch) => {
+    try {
+      const updated = await companionClient.updateSound(id, patch);
+      const sounds = applySoundUpdate(get().sounds, updated);
+      set({ sounds, boards: deriveBoards(sounds) });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
+  assignHotkey: async (id, hotkey) => {
+    try {
+      const updated = await companionClient.assignHotkey(id, hotkey);
+      const sounds = applySoundUpdate(get().sounds, updated);
+      set({ sounds, boards: deriveBoards(sounds) });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
   deleteSound: async (id) => {
     try {
       await companionClient.deleteSound(id);
       const sounds = get().sounds.filter((sound) => sound.id !== id);
       set({ sounds, boards: deriveBoards(sounds) });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
+  testRoute: async () => {
+    try { await companionClient.testRoute(); } catch (error) { set({ error: error.message }); }
+  },
+  checkUpdate: async () => {
+    try {
+      const updateStatus = await companionClient.checkUpdate();
+      set({ updateStatus });
+    } catch (error) {
+      set({ error: error.message });
+    }
+  },
+  downloadUpdate: async () => {
+    try {
+      const updateStatus = await companionClient.downloadUpdate();
+      set({ updateStatus });
     } catch (error) {
       set({ error: error.message });
     }
