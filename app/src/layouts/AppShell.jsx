@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, CircleDot, Command, Moon, Search, Volume2, VolumeX } from 'lucide-react';
+import { Bell, CircleDot, Command, Moon, RefreshCw, Search, Volume2, VolumeX } from 'lucide-react';
 import { routes } from '../data/seedData.js';
 import { iconMap } from '../lib/iconMap.js';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
@@ -12,6 +12,9 @@ export function AppShell({ children }) {
   const muted = useMemeBlipStore((state) => state.muted);
   const toggleMute = useMemeBlipStore((state) => state.toggleMute);
   const stopAll = useMemeBlipStore((state) => state.stopAll);
+  const initialize = useMemeBlipStore((state) => state.initialize);
+  const companionOnline = useMemeBlipStore((state) => state.companionOnline);
+  const error = useMemeBlipStore((state) => state.error);
 
   return (
     <div className="app-shell">
@@ -31,10 +34,11 @@ export function AppShell({ children }) {
             );
           })}
         </nav>
-        <div className="sidebar-card">
+        <div className={companionOnline ? 'sidebar-card' : 'sidebar-card offline'}>
           <p>Companion</p>
-          <strong><CircleDot size={13} /> Online</strong>
-          <span>Listening for global hotkeys.</span>
+          <strong><CircleDot size={13} /> {companionOnline ? 'Online' : 'Offline'}</strong>
+          <span>{companionOnline ? 'Hotkeys and audio API are active.' : 'Start the native companion to enable playback.'}</span>
+          {error ? <small>{error}</small> : null}
         </div>
       </aside>
 
@@ -46,6 +50,7 @@ export function AppShell({ children }) {
             <kbd><Command size={12} /> K</kbd>
           </label>
           <div className="top-actions">
+            <button className="icon-button" onClick={initialize}><RefreshCw size={18} /></button>
             <button className="icon-button"><Moon size={18} /></button>
             <button className="icon-button"><Bell size={18} /></button>
             <button className="danger-soft" onClick={stopAll}>Stop all</button>
