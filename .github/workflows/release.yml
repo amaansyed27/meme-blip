@@ -1,0 +1,41 @@
+name: Release MemeBlip
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Package portable bundle
+        shell: pwsh
+        run: .\scripts\package-windows.ps1
+
+      - name: Build installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: packaging\windows\MemeBlip.iss
+          options: /DMyAppVersion=${{ github.ref_name }}
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/MemeBlip-Windows.zip
+            release/MemeBlip-Windows-Setup.exe
