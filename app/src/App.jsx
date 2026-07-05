@@ -1,3 +1,4 @@
+import React from 'react';
 import { AppShell } from './layouts/AppShell.jsx';
 import { AudioRouting } from './pages/AudioRouting.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
@@ -18,7 +19,12 @@ const pages = {
 
 export default function App() {
   const route = useMemeBlipStore((state) => state.route);
+  const initialize = useMemeBlipStore((state) => state.initialize);
   const Page = pages[route] || Dashboard;
+
+  React.useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
     <AppShell>
