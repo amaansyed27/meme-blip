@@ -77,8 +77,7 @@ async fn list_devices(State(state): State<Arc<AppState>>, headers: HeaderMap) ->
 
 async fn test_device(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<serde_json::Value>, ApiError> {
     verify(&headers, &state)?;
-    let settings = state.storage.settings();
-    state.audio.test_tone(settings.output_device_id)?;
+    state.audio.stop_all();
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
@@ -190,11 +189,7 @@ async fn download_update(State(state): State<Arc<AppState>>, headers: HeaderMap)
 fn verify(headers: &HeaderMap, state: &AppState) -> Result<()> {
     let expected = state.storage.settings().api_token;
     let provided = headers.get("x-memeblip-token").and_then(|value| value.to_str().ok()).unwrap_or_default();
-    if provided == expected {
-        Ok(())
-    } else {
-        Err(anyhow!("unauthorized local API request"))
-    }
+    if provided == expected { Ok(()) } else { Err(anyhow!("unauthorized local API request")) }
 }
 
 fn static_dir() -> PathBuf {
@@ -212,9 +207,7 @@ fn static_dir() -> PathBuf {
 pub struct ApiError(anyhow::Error);
 
 impl<E> From<E> for ApiError where E: Into<anyhow::Error> {
-    fn from(error: E) -> Self {
-        Self(error.into())
-    }
+    fn from(error: E) -> Self { Self(error.into()) }
 }
 
 impl IntoResponse for ApiError {
