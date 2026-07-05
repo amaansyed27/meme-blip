@@ -38,7 +38,10 @@ impl Storage {
             AppSettings::default()
         };
 
-        Ok(Self { inner: Arc::new(Mutex::new(StorageInner { data_dir, sounds, settings })) })
+        let storage = Self { inner: Arc::new(Mutex::new(StorageInner { data_dir, sounds, settings })) };
+        storage.save_settings()?;
+        storage.save_sounds()?;
+        Ok(storage)
     }
 
     pub fn data_dir(&self) -> PathBuf {
