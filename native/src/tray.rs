@@ -26,7 +26,7 @@ fn run_tray() -> Result<(), Box<dyn std::error::Error>> {
     let menu_channel = MenuEvent::receiver();
     while let Ok(event) = menu_channel.recv() {
         if event.id == open_dashboard.id() {
-            let _ = open::that("http://127.0.0.1:48321");
+            let _ = open::that("http://127.0.0.1:48322");
         }
         if event.id == quit.id() {
             break;
