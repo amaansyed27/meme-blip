@@ -14,7 +14,7 @@ export function Sounds() {
       <PageHeader
         eyebrow="Library"
         title="Keep clips organised instead of buried in folders."
-        description="Import sounds, tag them, tune volume, and assign them to boards."
+        description="Rename clips, change boards, tune volume, delete noise, and keep the library usable."
         action={<label className="primary-button file-button"><Upload size={18} /> Import clips<input type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && importSound(event.target.files[0])} /></label>}
       />
       <section className="toolbar-panel">
@@ -24,7 +24,7 @@ export function Sounds() {
         <button className="filter-chip">Meetings</button>
         <button className="filter-chip"><FolderPlus size={15} /> New folder</button>
       </section>
-      {filtered.length ? <section className="sound-grid">{filtered.map((sound) => <SoundCard key={sound.id} sound={sound} />)}</section> : <section className="empty-state">No sounds found. Import an audio clip to create your first board.</section>}
+      {filtered.length ? <section className="sound-grid">{filtered.map((sound) => <SoundCard key={sound.id} sound={sound} editable />)}</section> : <section className="empty-state">No sounds found. Import an audio clip to create your first board.</section>}
     </>
   );
 }
