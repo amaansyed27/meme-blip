@@ -4,9 +4,14 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::{fs::File, io::BufReader, sync::{Arc, Mutex}};
 
+struct ActiveSink {
+    _stream: OutputStream,
+    sink: Sink,
+}
+
 #[derive(Clone)]
 pub struct AudioEngine {
-    sinks: Arc<Mutex<Vec<Sink>>>,
+    sinks: Arc<Mutex<Vec<ActiveSink>>>,
 }
 
 impl AudioEngine {
@@ -40,7 +45,7 @@ impl AudioEngine {
         let source = Decoder::new(BufReader::new(file)).context("could not decode audio file")?;
         let source = source.amplify((sound.volume as f32 / 100.0).clamp(0.0, 1.5));
 
-        let (_stream, handle) = match selected_device_id {
+        let (stream, handle) = match selected_device_id {
             Some(id) => {
                 let device = self.find_output_device(&id)?.ok_or_else(|| anyhow!("selected output device not found"))?;
                 OutputStream::try_from_device(&device).context("could not open selected output device")?
@@ -50,14 +55,17 @@ impl AudioEngine {
 
         let sink = Sink::try_new(&handle).context("could not create audio sink")?;
         sink.append(source);
-        sink.detach();
+
+        let mut sinks = self.sinks.lock().unwrap();
+        sinks.retain(|active| !active.sink.empty());
+        sinks.push(ActiveSink { _stream: stream, sink });
         Ok(())
     }
 
     pub fn stop_all(&self) {
         let mut sinks = self.sinks.lock().unwrap();
-        for sink in sinks.iter() {
-            sink.stop();
+        for active in sinks.iter() {
+            active.sink.stop();
         }
         sinks.clear();
     }
