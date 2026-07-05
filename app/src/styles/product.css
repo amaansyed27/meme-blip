@@ -8,3 +8,10 @@
 .hotkey-input:focus { border-color: rgba(125,255,196,0.45); box-shadow: 0 0 0 4px rgba(125,255,196,0.08); }
 .status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 999px; color: var(--mint); background: rgba(125,255,196,0.12); }
 .status-pill.down { color: var(--red); background: rgba(255,119,119,0.12); }
+.inline-edit { width: 100%; border: 0; outline: 0; color: var(--soft); background: transparent; }
+.inline-edit:focus { color: white; }
+.title-edit { color: white; font-weight: 800; font-size: 16px; }
+.volume-slider { position: absolute; left: 16px; right: 54px; bottom: 20px; height: 18px; opacity: 0; transition: 160ms ease; }
+.sound-card:hover .volume-slider { opacity: 1; }
+.danger-icon { color: #ffc7c7; background: rgba(255,119,119,0.12); }
+.route-step { display: flex; align-items: center; gap: 10px; }
