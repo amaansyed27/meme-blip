@@ -28,13 +28,22 @@ pub struct AudioDevice {
 pub struct AppSettings {
     pub output_device_id: Option<String>,
     pub monitor_device_id: Option<String>,
+    pub input_device_id: Option<String>,
+    pub mic_passthrough_enabled: bool,
     pub start_on_boot: bool,
     pub api_token: String,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
-        Self { output_device_id: None, monitor_device_id: None, start_on_boot: true, api_token: uuid::Uuid::new_v4().to_string() }
+        Self {
+            output_device_id: None,
+            monitor_device_id: None,
+            input_device_id: None,
+            mic_passthrough_enabled: true,
+            start_on_boot: true,
+            api_token: uuid::Uuid::new_v4().to_string(),
+        }
     }
 }
 
@@ -48,6 +57,29 @@ pub struct SetOutputDeviceRequest {
 #[serde(rename_all = "camelCase")]
 pub struct SetMonitorDeviceRequest {
     pub device_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetInputDeviceRequest {
+    pub device_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetMicPassthroughRequest {
+    pub enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MixerStatus {
+    pub input_device_id: Option<String>,
+    pub output_device_id: Option<String>,
+    pub monitor_device_id: Option<String>,
+    pub mic_passthrough_enabled: bool,
+    pub intended_target_input: String,
+    pub intended_speaker_output: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
