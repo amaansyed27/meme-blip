@@ -1,6 +1,6 @@
 use crate::{audio::AudioEngine, models::{AssignHotkeyRequest, HealthResponse, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
 use anyhow::{anyhow, Result};
-use axum::{extract::{Multipart, Path, State}, http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::{delete, get, patch, post}, Json, Router};
+use axum::{extract::{Multipart, Path, State}, http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::{get, patch, post}, Json, Router};
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
 use tower_http::{cors::CorsLayer, services::ServeDir};
 use uuid::Uuid;
