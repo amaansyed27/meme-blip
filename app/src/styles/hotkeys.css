@@ -1,3 +1,38 @@
+.ptt-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(125,255,196,.18);
+  border-radius: 13px;
+  color: var(--soft);
+  background: rgba(125,255,196,.055);
+  font-size: 12px;
+}
+
+.ptt-note strong {
+  color: white;
+  font-size: 12px;
+}
+
+.ptt-note span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ptt-note kbd {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 2px 6px;
+  color: white;
+  background: rgba(255,255,255,.06);
+  font-size: 11px;
+}
+
 .preset-row {
   display: flex;
   flex-wrap: wrap;
