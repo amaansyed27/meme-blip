@@ -34,10 +34,14 @@ export const useMemeBlipStore = create((set, get) => ({
   activeSoundId: null,
   selectedDeviceId: null,
   monitorDeviceId: null,
+  inputDeviceId: null,
+  micPassthroughEnabled: true,
+  mixerStatus: null,
   updateStatus: null,
   sounds: [],
   boards: [],
   devices: [],
+  inputDevices: [],
   setRoute: (route) => set({ route }),
   setQuery: (query) => set({ query }),
   initialize: async () => {
@@ -46,42 +50,66 @@ export const useMemeBlipStore = create((set, get) => ({
       const health = await companionClient.health();
       const sounds = await companionClient.sounds();
       const devices = await companionClient.devices();
+      const inputDevices = await companionClient.inputDevices();
       const settings = await companionClient.settings();
+      const mixerStatus = await companionClient.mixerStatus();
       set({
         companionOnline: Boolean(health.ok),
         sounds,
         boards: deriveBoards(sounds),
         devices,
+        inputDevices,
         selectedDeviceId: settings.outputDeviceId || null,
         monitorDeviceId: settings.monitorDeviceId || null,
+        inputDeviceId: settings.inputDeviceId || null,
+        micPassthroughEnabled: settings.micPassthroughEnabled ?? true,
+        mixerStatus,
         loading: false
       });
     } catch (error) {
       set({ companionOnline: false, loading: false, error: error.message });
     }
   },
+  refreshDevices: async () => {
+    const devices = await companionClient.devices();
+    const inputDevices = await companionClient.inputDevices();
+    const mixerStatus = await companionClient.mixerStatus();
+    set({ devices, inputDevices, mixerStatus });
+  },
   setSelectedDevice: async (selectedDeviceId) => {
     set({ selectedDeviceId });
     try {
       await companionClient.setOutputDevice(selectedDeviceId);
-      const devices = await companionClient.devices();
-      set({ devices });
+      await get().refreshDevices();
     } catch (error) { set({ error: error.message }); }
   },
   setMonitorDevice: async (monitorDeviceId) => {
     set({ monitorDeviceId });
     try {
       await companionClient.setMonitorDevice(monitorDeviceId);
-      const devices = await companionClient.devices();
-      set({ devices });
+      await get().refreshDevices();
     } catch (error) { set({ error: error.message }); }
   },
   clearMonitorDevice: async () => {
     set({ monitorDeviceId: null });
     try {
       await companionClient.setMonitorDevice(null);
-      const devices = await companionClient.devices();
-      set({ devices });
+      await get().refreshDevices();
+    } catch (error) { set({ error: error.message }); }
+  },
+  setInputDevice: async (inputDeviceId) => {
+    set({ inputDeviceId });
+    try {
+      await companionClient.setInputDevice(inputDeviceId);
+      await get().refreshDevices();
+    } catch (error) { set({ error: error.message }); }
+  },
+  setMicPassthroughEnabled: async (micPassthroughEnabled) => {
+    set({ micPassthroughEnabled });
+    try {
+      await companionClient.setMicPassthrough(micPassthroughEnabled);
+      const mixerStatus = await companionClient.mixerStatus();
+      set({ mixerStatus });
     } catch (error) { set({ error: error.message }); }
   },
   toggleMute: () => set((state) => ({ muted: !state.muted })),
