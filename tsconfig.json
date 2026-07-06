@@ -6,6 +6,8 @@
     "noEmit": true,
     "skipLibCheck": true,
     "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
     "target": "ES2022"
   },
   "include": ["app/**/*.jsx", "app/**/*.js", "vite.config.js"]
