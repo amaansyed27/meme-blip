@@ -1,5 +1,6 @@
 mod api;
 mod audio;
+mod driver;
 mod hotkeys;
 mod models;
 mod storage;
