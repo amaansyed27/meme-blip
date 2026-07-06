@@ -10,7 +10,7 @@ pub struct AudioEngine {
 }
 
 enum AudioCommand {
-    Play { sound: SoundClip, selected_device_id: Option<String> },
+    Play { sound: SoundClip, output_device_id: Option<String>, monitor_device_id: Option<String> },
     StopAll,
 }
 
@@ -26,13 +26,13 @@ impl AudioEngine {
         Self { tx }
     }
 
-    pub fn devices(&self, selected_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
-        list_output_devices(selected_device_id)
+    pub fn devices(&self, output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
+        list_output_devices(output_device_id, monitor_device_id)
     }
 
-    pub fn play(&self, sound: &SoundClip, selected_device_id: Option<String>) -> Result<()> {
+    pub fn play(&self, sound: &SoundClip, output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<()> {
         self.tx
-            .send(AudioCommand::Play { sound: sound.clone(), selected_device_id })
+            .send(AudioCommand::Play { sound: sound.clone(), output_device_id, monitor_device_id })
             .map_err(|error| anyhow!("audio worker unavailable: {error}"))
     }
 
@@ -46,9 +46,14 @@ fn audio_worker(rx: mpsc::Receiver<AudioCommand>) {
     while let Ok(command) = rx.recv() {
         active_sinks.retain(|active| !active.sink.empty());
         match command {
-            AudioCommand::Play { sound, selected_device_id } => {
-                if let Err(error) = play_now(&sound, selected_device_id, &mut active_sinks) {
-                    eprintln!("audio playback error: {error}");
+            AudioCommand::Play { sound, output_device_id, monitor_device_id } => {
+                if let Err(error) = play_now(&sound, output_device_id, &mut active_sinks) {
+                    eprintln!("route playback error: {error}");
+                }
+                if let Some(monitor_id) = monitor_device_id {
+                    if let Err(error) = play_now(&sound, Some(monitor_id), &mut active_sinks) {
+                        eprintln!("monitor playback error: {error}");
+                    }
                 }
             }
             AudioCommand::StopAll => {
@@ -80,7 +85,7 @@ fn play_now(sound: &SoundClip, selected_device_id: Option<String>, active_sinks:
     Ok(())
 }
 
-fn list_output_devices(selected_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
+fn list_output_devices(output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
     let host = cpal::default_host();
     let devices = host.output_devices().context("could not enumerate output devices")?;
     let mut result = Vec::new();
@@ -88,7 +93,13 @@ fn list_output_devices(selected_device_id: Option<String>) -> Result<Vec<AudioDe
     for (index, device) in devices.enumerate() {
         let name = device.name().unwrap_or_else(|_| format!("Output device {index}"));
         let id = device_id(&name, index);
-        let status = if selected_device_id.as_deref() == Some(id.as_str()) { "Selected" } else { "Available" };
+        let status = if output_device_id.as_deref() == Some(id.as_str()) {
+            "Mic route"
+        } else if monitor_device_id.as_deref() == Some(id.as_str()) {
+            "Monitor"
+        } else {
+            "Available"
+        };
         let lower = name.to_lowercase();
         let device_type = if lower.contains("cable") || lower.contains("blackhole") || lower.contains("voicemeeter") {
             "Virtual route"
