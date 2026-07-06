@@ -1,30 +1,37 @@
-import { FolderPlus, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { SoundCard } from '../components/SoundCard.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 
 export function Sounds() {
   const sounds = useMemeBlipStore((state) => state.sounds);
+  const boards = useMemeBlipStore((state) => state.boards);
+  const activeBoard = useMemeBlipStore((state) => state.activeBoard);
+  const setActiveBoard = useMemeBlipStore((state) => state.setActiveBoard);
   const importSound = useMemeBlipStore((state) => state.importSound);
   const query = useMemeBlipStore((state) => state.query).toLowerCase();
-  const filtered = sounds.filter((sound) => sound.name.toLowerCase().includes(query) || sound.board.toLowerCase().includes(query));
+
+  const filtered = sounds.filter((sound) => {
+    const matchesBoard = !activeBoard || sound.board === activeBoard;
+    const matchesQuery = sound.name.toLowerCase().includes(query) || sound.board.toLowerCase().includes(query);
+    return matchesBoard && matchesQuery;
+  });
 
   return (
     <>
       <PageHeader
         eyebrow="Library"
-        title="Keep clips organised instead of buried in folders."
-        description="Rename clips, change boards, tune volume, delete noise, and keep the library usable."
+        title="Your clip library."
+        description={activeBoard ? `Showing ${activeBoard}. Imported clips are added to this board.` : 'Import clips, rename them, assign boards, and tune playback.'}
         action={<label className="primary-button file-button"><Upload size={18} /> Import clips<input type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && importSound(event.target.files[0])} /></label>}
       />
-      <section className="toolbar-panel">
-        <button className="filter-chip active">All clips</button>
-        <button className="filter-chip">Memes</button>
-        <button className="filter-chip">Gaming</button>
-        <button className="filter-chip">Meetings</button>
-        <button className="filter-chip"><FolderPlus size={15} /> New folder</button>
+
+      <section className="toolbar-panel board-filter-bar">
+        <button className={!activeBoard ? 'filter-chip active' : 'filter-chip'} onClick={() => setActiveBoard(null)}>All clips</button>
+        {boards.map((board) => <button key={board.id} className={activeBoard === board.name ? 'filter-chip active' : 'filter-chip'} onClick={() => setActiveBoard(board.name)}>{board.name}</button>)}
       </section>
-      {filtered.length ? <section className="sound-grid">{filtered.map((sound) => <SoundCard key={sound.id} sound={sound} editable />)}</section> : <section className="empty-state">No sounds found. Import an audio clip to create your first board.</section>}
+
+      {filtered.length ? <section className="sound-grid">{filtered.map((sound) => <SoundCard key={sound.id} sound={sound} editable />)}</section> : <section className="empty-state">No clips here yet. Import audio to add it to this board.</section>}
     </>
   );
 }
