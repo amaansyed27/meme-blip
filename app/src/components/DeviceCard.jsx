@@ -1,13 +1,8 @@
 import { CheckCircle2, Circle } from 'lucide-react';
-import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 
-export function DeviceCard({ device }) {
-  const selectedDeviceId = useMemeBlipStore((state) => state.selectedDeviceId);
-  const setSelectedDevice = useMemeBlipStore((state) => state.setSelectedDevice);
-  const selected = selectedDeviceId === device.id;
-
+export function DeviceCard({ device, selected, onSelect }) {
   return (
-    <button className={selected ? 'device-card selected' : 'device-card'} onClick={() => setSelectedDevice(device.id)}>
+    <button className={selected ? 'device-card selected' : 'device-card'} onClick={() => onSelect(device.id)}>
       <span>{selected ? <CheckCircle2 size={18} /> : <Circle size={18} />}</span>
       <div>
         <strong>{device.name}</strong>
