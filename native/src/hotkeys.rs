@@ -1,7 +1,19 @@
 use crate::{audio::AudioEngine, storage::Storage};
-use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
-use global_hotkey::hotkey::{Code, HotKey, Modifiers};
-use std::{collections::HashMap, thread, time::{Duration, Instant}};
+use std::{collections::{HashMap, HashSet}, thread, time::{Duration, Instant}};
+
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
+    GetAsyncKeyState, VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_MENU, VK_LMENU, VK_RMENU, VK_SHIFT, VK_LSHIFT, VK_RSHIFT,
+};
+
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+struct KeyCombo {
+    ctrl: bool,
+    alt: bool,
+    shift: bool,
+    vk: i32,
+    label: String,
+}
 
 pub fn spawn_hotkeys(storage: Storage, audio: AudioEngine) {
     thread::spawn(move || {
@@ -11,126 +23,168 @@ pub fn spawn_hotkeys(storage: Storage, audio: AudioEngine) {
     });
 }
 
+#[cfg(target_os = "windows")]
 fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::error::Error>> {
-    let manager = GlobalHotKeyManager::new()?;
-    let receiver = GlobalHotKeyEvent::receiver();
-    let mut bindings = HashMap::new();
-    let mut registered_hotkeys: Vec<HotKey> = Vec::new();
+    let mut bindings: HashMap<KeyCombo, String> = HashMap::new();
+    let mut pressed: HashSet<KeyCombo> = HashSet::new();
     let mut last_seen = String::new();
     let mut last_scan = Instant::now() - Duration::from_secs(3);
-    println!("Hotkey worker active. For Valorant, run the companion as Administrator if keys do not fire in-game.");
+
+    println!("Hotkey worker active using Windows polling. For Valorant, run the companion as Administrator if keys do not fire in-game.");
 
     loop {
         if last_scan.elapsed() >= Duration::from_secs(2) {
             let signature = storage.sounds().iter().map(|sound| format!("{}:{}", sound.id, sound.key)).collect::<Vec<_>>().join("|");
             if signature != last_seen {
-                for hotkey in registered_hotkeys.drain(..) {
-                    let _ = manager.unregister(hotkey);
-                }
                 bindings.clear();
-
                 let mut registered_count = 0;
+
                 for sound in storage.sounds() {
-                    if let Some(hotkey) = parse_hotkey(&sound.key) {
-                        let id = hotkey.id();
-                        match manager.register(hotkey) {
-                            Ok(_) => {
-                                println!("Registered hotkey: {} -> {}", sound.key, sound.name);
-                                bindings.insert(id, sound.id.clone());
-                                if let Some(saved_hotkey) = parse_hotkey(&sound.key) {
-                                    registered_hotkeys.push(saved_hotkey);
-                                }
-                                registered_count += 1;
-                            }
-                            Err(error) => {
-                                eprintln!("Could not register hotkey '{}' for '{}': {error}", sound.key, sound.name);
-                            }
-                        }
+                    if let Some(combo) = parse_hotkey(&sound.key) {
+                        println!("Registered hotkey: {} -> {}", combo.label, sound.name);
+                        bindings.insert(combo, sound.id.clone());
+                        registered_count += 1;
+                    } else if !sound.key.eq_ignore_ascii_case("unassigned") {
+                        eprintln!("Unsupported hotkey '{}' for '{}'", sound.key, sound.name);
                     }
                 }
+
+                pressed.clear();
                 println!("Hotkey map reloaded: {registered_count} active bindings");
                 last_seen = signature;
             }
             last_scan = Instant::now();
         }
 
-        if let Ok(event) = receiver.recv_timeout(Duration::from_millis(250)) {
-            if event.state == HotKeyState::Pressed {
-                if let Some(sound_id) = bindings.get(&event.id) {
+        let combos: Vec<KeyCombo> = bindings.keys().cloned().collect();
+        for combo in combos {
+            let down = combo_is_down(&combo);
+            if down && !pressed.contains(&combo) {
+                pressed.insert(combo.clone());
+                if let Some(sound_id) = bindings.get(&combo) {
                     if let Some(sound) = storage.find_sound(sound_id) {
                         let settings = storage.settings();
                         println!("Hotkey fired: {}", sound.name);
                         let _ = audio.play(&sound, settings.output_device_id, settings.monitor_device_id);
                     }
                 }
+            } else if !down {
+                pressed.remove(&combo);
             }
         }
+
+        thread::sleep(Duration::from_millis(35));
     }
 }
 
-fn parse_hotkey(value: &str) -> Option<HotKey> {
-    let parts: Vec<String> = value.split('+').map(|part| part.trim().to_lowercase()).collect();
+#[cfg(not(target_os = "windows"))]
+fn run_hotkeys(_storage: Storage, _audio: AudioEngine) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Hotkeys are currently implemented for Windows only.");
+    loop { thread::sleep(Duration::from_secs(60)); }
+}
+
+#[cfg(target_os = "windows")]
+fn combo_is_down(combo: &KeyCombo) -> bool {
+    if combo.ctrl && !any_down(&[VK_CONTROL as i32, VK_LCONTROL as i32, VK_RCONTROL as i32]) { return false; }
+    if combo.alt && !any_down(&[VK_MENU as i32, VK_LMENU as i32, VK_RMENU as i32]) { return false; }
+    if combo.shift && !any_down(&[VK_SHIFT as i32, VK_LSHIFT as i32, VK_RSHIFT as i32]) { return false; }
+    key_down(combo.vk)
+}
+
+#[cfg(target_os = "windows")]
+fn any_down(keys: &[i32]) -> bool {
+    keys.iter().any(|key| key_down(*key))
+}
+
+#[cfg(target_os = "windows")]
+fn key_down(vk: i32) -> bool {
+    unsafe { (GetAsyncKeyState(vk) as u16 & 0x8000) != 0 }
+}
+
+#[cfg(target_os = "windows")]
+fn parse_hotkey(value: &str) -> Option<KeyCombo> {
+    let parts: Vec<String> = value.split('+').map(|part| part.trim().to_lowercase()).filter(|part| !part.is_empty()).collect();
     if parts.is_empty() || value.eq_ignore_ascii_case("unassigned") {
         return None;
     }
 
-    let mut modifiers = Modifiers::empty();
-    let mut code = None;
+    let mut ctrl = false;
+    let mut alt = false;
+    let mut shift = false;
+    let mut vk = None;
+
     for part in parts {
         match part.as_str() {
-            "alt" => modifiers |= Modifiers::ALT,
-            "ctrl" | "control" => modifiers |= Modifiers::CONTROL,
-            "shift" => modifiers |= Modifiers::SHIFT,
-            "1" => code = Some(Code::Digit1),
-            "2" => code = Some(Code::Digit2),
-            "3" => code = Some(Code::Digit3),
-            "4" => code = Some(Code::Digit4),
-            "5" => code = Some(Code::Digit5),
-            "6" => code = Some(Code::Digit6),
-            "7" => code = Some(Code::Digit7),
-            "8" => code = Some(Code::Digit8),
-            "9" => code = Some(Code::Digit9),
-            "a" => code = Some(Code::KeyA),
-            "b" => code = Some(Code::KeyB),
-            "c" => code = Some(Code::KeyC),
-            "d" => code = Some(Code::KeyD),
-            "e" => code = Some(Code::KeyE),
-            "f" => code = Some(Code::KeyF),
-            "g" => code = Some(Code::KeyG),
-            "h" => code = Some(Code::KeyH),
-            "i" => code = Some(Code::KeyI),
-            "j" => code = Some(Code::KeyJ),
-            "k" => code = Some(Code::KeyK),
-            "l" => code = Some(Code::KeyL),
-            "m" => code = Some(Code::KeyM),
-            "n" => code = Some(Code::KeyN),
-            "o" => code = Some(Code::KeyO),
-            "p" => code = Some(Code::KeyP),
-            "q" => code = Some(Code::KeyQ),
-            "r" => code = Some(Code::KeyR),
-            "s" => code = Some(Code::KeyS),
-            "t" => code = Some(Code::KeyT),
-            "u" => code = Some(Code::KeyU),
-            "v" => code = Some(Code::KeyV),
-            "w" => code = Some(Code::KeyW),
-            "x" => code = Some(Code::KeyX),
-            "y" => code = Some(Code::KeyY),
-            "z" => code = Some(Code::KeyZ),
-            "f1" => code = Some(Code::F1),
-            "f2" => code = Some(Code::F2),
-            "f3" => code = Some(Code::F3),
-            "f4" => code = Some(Code::F4),
-            "f5" => code = Some(Code::F5),
-            "f6" => code = Some(Code::F6),
-            "f7" => code = Some(Code::F7),
-            "f8" => code = Some(Code::F8),
-            "f9" => code = Some(Code::F9),
-            "f10" => code = Some(Code::F10),
-            "f11" => code = Some(Code::F11),
-            "f12" => code = Some(Code::F12),
+            "ctrl" | "control" => ctrl = true,
+            "alt" => alt = true,
+            "shift" => shift = true,
+            "1" => vk = Some(0x31),
+            "2" => vk = Some(0x32),
+            "3" => vk = Some(0x33),
+            "4" => vk = Some(0x34),
+            "5" => vk = Some(0x35),
+            "6" => vk = Some(0x36),
+            "7" => vk = Some(0x37),
+            "8" => vk = Some(0x38),
+            "9" => vk = Some(0x39),
+            "0" => vk = Some(0x30),
+            "a" => vk = Some(0x41),
+            "b" => vk = Some(0x42),
+            "c" => vk = Some(0x43),
+            "d" => vk = Some(0x44),
+            "e" => vk = Some(0x45),
+            "f" => vk = Some(0x46),
+            "g" => vk = Some(0x47),
+            "h" => vk = Some(0x48),
+            "i" => vk = Some(0x49),
+            "j" => vk = Some(0x4A),
+            "k" => vk = Some(0x4B),
+            "l" => vk = Some(0x4C),
+            "m" => vk = Some(0x4D),
+            "n" => vk = Some(0x4E),
+            "o" => vk = Some(0x4F),
+            "p" => vk = Some(0x50),
+            "q" => vk = Some(0x51),
+            "r" => vk = Some(0x52),
+            "s" => vk = Some(0x53),
+            "t" => vk = Some(0x54),
+            "u" => vk = Some(0x55),
+            "v" => vk = Some(0x56),
+            "w" => vk = Some(0x57),
+            "x" => vk = Some(0x58),
+            "y" => vk = Some(0x59),
+            "z" => vk = Some(0x5A),
+            "f1" => vk = Some(0x70),
+            "f2" => vk = Some(0x71),
+            "f3" => vk = Some(0x72),
+            "f4" => vk = Some(0x73),
+            "f5" => vk = Some(0x74),
+            "f6" => vk = Some(0x75),
+            "f7" => vk = Some(0x76),
+            "f8" => vk = Some(0x77),
+            "f9" => vk = Some(0x78),
+            "f10" => vk = Some(0x79),
+            "f11" => vk = Some(0x7A),
+            "f12" => vk = Some(0x7B),
             _ => {}
         }
     }
 
-    code.map(|key| HotKey::new(if modifiers.is_empty() { None } else { Some(modifiers) }, key))
+    let vk = vk?;
+    let mut pieces = Vec::new();
+    if ctrl { pieces.push("Ctrl".to_string()); }
+    if alt { pieces.push("Alt".to_string()); }
+    if shift { pieces.push("Shift".to_string()); }
+    pieces.push(key_label(vk));
+
+    Some(KeyCombo { ctrl, alt, shift, vk, label: pieces.join(" + ") })
+}
+
+#[cfg(target_os = "windows")]
+fn key_label(vk: i32) -> String {
+    match vk {
+        0x70..=0x7B => format!("F{}", vk - 0x6F),
+        0x30..=0x39 | 0x41..=0x5A => char::from_u32(vk as u32).unwrap_or('?').to_string(),
+        _ => format!("VK{vk}"),
+    }
 }
