@@ -26,6 +26,55 @@ struct ActivePassthrough {
     _output_stream: Stream,
 }
 
+struct PassthroughState {
+    mono_samples: VecDeque<f32>,
+    input_sample_rate: f32,
+    read_pos: f32,
+}
+
+impl PassthroughState {
+    fn new(input_sample_rate: f32) -> Self {
+        Self { mono_samples: VecDeque::with_capacity(96_000), input_sample_rate, read_pos: 0.0 }
+    }
+
+    fn push_mono(&mut self, sample: f32) {
+        while self.mono_samples.len() > 192_000 {
+            self.mono_samples.pop_front();
+            if self.read_pos > 0.0 {
+                self.read_pos -= 1.0;
+            }
+        }
+        self.mono_samples.push_back(sample.clamp(-1.0, 1.0));
+    }
+
+    fn next_sample(&mut self, output_sample_rate: f32) -> f32 {
+        if self.mono_samples.len() < 2 {
+            return 0.0;
+        }
+
+        let index = self.read_pos.floor() as usize;
+        if index + 1 >= self.mono_samples.len() {
+            return 0.0;
+        }
+
+        let frac = self.read_pos - index as f32;
+        let a = self.mono_samples[index];
+        let b = self.mono_samples[index + 1];
+        let sample = a + (b - a) * frac;
+        self.read_pos += self.input_sample_rate / output_sample_rate;
+
+        let drop_count = self.read_pos.floor() as usize;
+        if drop_count > 0 {
+            for _ in 0..drop_count.min(self.mono_samples.len().saturating_sub(1)) {
+                self.mono_samples.pop_front();
+            }
+            self.read_pos -= drop_count as f32;
+        }
+
+        sample.clamp(-1.0, 1.0)
+    }
+}
+
 impl AudioEngine {
     pub fn new() -> Self {
         let (tx, rx) = mpsc::channel::<AudioCommand>();
@@ -60,7 +109,7 @@ impl AudioEngine {
 
 fn audio_worker(rx: mpsc::Receiver<AudioCommand>) {
     let mut active_sinks: Vec<ActiveSink> = Vec::new();
-    let mut passthrough: Option<ActivePassthrough> = None;
+    let mut _passthrough: Option<ActivePassthrough> = None;
 
     while let Ok(command) = rx.recv() {
         active_sinks.retain(|active| !active.sink.empty());
@@ -76,13 +125,13 @@ fn audio_worker(rx: mpsc::Receiver<AudioCommand>) {
                 }
             }
             AudioCommand::ConfigurePassthrough { input_device_id, output_device_id, enabled } => {
-                passthrough = None;
+                _passthrough = None;
                 if enabled {
                     match (input_device_id, output_device_id) {
                         (Some(input_id), Some(output_id)) => match start_passthrough(&input_id, &output_id) {
                             Ok(active) => {
                                 println!("Mic passthrough active: {input_id} -> {output_id}");
-                                passthrough = Some(active);
+                                _passthrough = Some(active);
                             }
                             Err(error) => eprintln!("mic passthrough error: {error}"),
                         },
@@ -125,72 +174,92 @@ fn start_passthrough(input_id: &str, output_id: &str) -> Result<ActivePassthroug
 
     let input_config = input_device.default_input_config().context("could not open selected input config")?;
     let output_config = output_device.default_output_config().context("could not open selected output config")?;
-    let buffer = Arc::new(Mutex::new(VecDeque::<f32>::with_capacity(48_000)));
+    let input_sample_rate = input_config.sample_rate().0 as f32;
+    let output_sample_rate = output_config.sample_rate().0 as f32;
+    let input_channels = input_config.channels();
+    let output_channels = output_config.channels();
+    let state = Arc::new(Mutex::new(PassthroughState::new(input_sample_rate)));
 
-    let input_stream = build_input_stream(&input_device, &input_config, buffer.clone())?;
-    let output_stream = build_output_stream(&output_device, &output_config, buffer)?;
+    println!(
+        "Mic passthrough formats: input={}Hz/{}ch -> output={}Hz/{}ch",
+        input_sample_rate, input_channels, output_sample_rate, output_channels
+    );
+
+    let input_stream = build_input_stream(&input_device, &input_config, state.clone())?;
+    let output_stream = build_output_stream(&output_device, &output_config, state)?;
     input_stream.play().context("could not start mic input stream")?;
     output_stream.play().context("could not start virtual cable output stream")?;
 
     Ok(ActivePassthrough { _input_stream: input_stream, _output_stream: output_stream })
 }
 
-fn build_input_stream(device: &cpal::Device, config: &SupportedStreamConfig, buffer: Arc<Mutex<VecDeque<f32>>>) -> Result<Stream> {
+fn build_input_stream(device: &cpal::Device, config: &SupportedStreamConfig, state: Arc<Mutex<PassthroughState>>) -> Result<Stream> {
     let stream_config: StreamConfig = config.clone().into();
+    let channels = config.channels() as usize;
     let error = |err| eprintln!("input stream error: {err}");
     match config.sample_format() {
-        SampleFormat::F32 => device.build_input_stream(&stream_config, move |data: &[f32], _| push_samples(data.iter().copied(), &buffer), error, None),
-        SampleFormat::I16 => device.build_input_stream(&stream_config, move |data: &[i16], _| push_samples(data.iter().map(|sample| *sample as f32 / i16::MAX as f32), &buffer), error, None),
-        SampleFormat::U16 => device.build_input_stream(&stream_config, move |data: &[u16], _| push_samples(data.iter().map(|sample| (*sample as f32 - 32768.0) / 32768.0), &buffer), error, None),
+        SampleFormat::F32 => device.build_input_stream(&stream_config, move |data: &[f32], _| push_input_frames(data.iter().copied(), channels, &state), error, None),
+        SampleFormat::I16 => device.build_input_stream(&stream_config, move |data: &[i16], _| push_input_frames(data.iter().map(|sample| *sample as f32 / i16::MAX as f32), channels, &state), error, None),
+        SampleFormat::U16 => device.build_input_stream(&stream_config, move |data: &[u16], _| push_input_frames(data.iter().map(|sample| (*sample as f32 - 32768.0) / 32768.0), channels, &state), error, None),
         other => return Err(anyhow!("unsupported input sample format: {other:?}")),
     }
     .context("could not build mic input stream")
 }
 
-fn build_output_stream(device: &cpal::Device, config: &SupportedStreamConfig, buffer: Arc<Mutex<VecDeque<f32>>>) -> Result<Stream> {
+fn build_output_stream(device: &cpal::Device, config: &SupportedStreamConfig, state: Arc<Mutex<PassthroughState>>) -> Result<Stream> {
     let stream_config: StreamConfig = config.clone().into();
+    let channels = config.channels() as usize;
+    let sample_rate = config.sample_rate().0 as f32;
     let error = |err| eprintln!("output stream error: {err}");
     match config.sample_format() {
-        SampleFormat::F32 => device.build_output_stream(&stream_config, move |data: &mut [f32], _| fill_f32(data, &buffer), error, None),
-        SampleFormat::I16 => device.build_output_stream(&stream_config, move |data: &mut [i16], _| fill_i16(data, &buffer), error, None),
-        SampleFormat::U16 => device.build_output_stream(&stream_config, move |data: &mut [u16], _| fill_u16(data, &buffer), error, None),
+        SampleFormat::F32 => device.build_output_stream(&stream_config, move |data: &mut [f32], _| fill_output_frames(data, channels, sample_rate, &state), error, None),
+        SampleFormat::I16 => device.build_output_stream(&stream_config, move |data: &mut [i16], _| fill_output_frames(data, channels, sample_rate, &state), error, None),
+        SampleFormat::U16 => device.build_output_stream(&stream_config, move |data: &mut [u16], _| fill_output_frames(data, channels, sample_rate, &state), error, None),
         other => return Err(anyhow!("unsupported output sample format: {other:?}")),
     }
     .context("could not build virtual cable output stream")
 }
 
-fn push_samples<I>(samples: I, buffer: &Arc<Mutex<VecDeque<f32>>>)
+fn push_input_frames<I>(samples: I, channels: usize, state: &Arc<Mutex<PassthroughState>>)
 where
     I: IntoIterator<Item = f32>,
 {
-    let mut queue = buffer.lock().unwrap();
+    let mut pending = Vec::with_capacity(channels.max(1));
+    let mut locked = state.lock().unwrap();
     for sample in samples {
-        if queue.len() > 96_000 {
-            queue.pop_front();
+        pending.push(sample.clamp(-1.0, 1.0));
+        if pending.len() == channels.max(1) {
+            let mono = pending.iter().copied().sum::<f32>() / pending.len() as f32;
+            locked.push_mono(mono);
+            pending.clear();
         }
-        queue.push_back(sample.clamp(-1.0, 1.0));
     }
 }
 
-fn pop_sample(buffer: &Arc<Mutex<VecDeque<f32>>>) -> f32 {
-    buffer.lock().unwrap().pop_front().unwrap_or(0.0)
+trait OutputSample: Sized {
+    fn from_f32(sample: f32) -> Self;
 }
 
-fn fill_f32(data: &mut [f32], buffer: &Arc<Mutex<VecDeque<f32>>>) {
-    for sample in data {
-        *sample = pop_sample(buffer);
-    }
+impl OutputSample for f32 {
+    fn from_f32(sample: f32) -> Self { sample.clamp(-1.0, 1.0) }
 }
 
-fn fill_i16(data: &mut [i16], buffer: &Arc<Mutex<VecDeque<f32>>>) {
-    for sample in data {
-        *sample = (pop_sample(buffer).clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
-    }
+impl OutputSample for i16 {
+    fn from_f32(sample: f32) -> Self { (sample.clamp(-1.0, 1.0) * i16::MAX as f32) as i16 }
 }
 
-fn fill_u16(data: &mut [u16], buffer: &Arc<Mutex<VecDeque<f32>>>) {
-    for sample in data {
-        *sample = ((pop_sample(buffer).clamp(-1.0, 1.0) + 1.0) * 0.5 * u16::MAX as f32) as u16;
+impl OutputSample for u16 {
+    fn from_f32(sample: f32) -> Self { ((sample.clamp(-1.0, 1.0) + 1.0) * 0.5 * u16::MAX as f32) as u16 }
+}
+
+fn fill_output_frames<T: OutputSample>(data: &mut [T], channels: usize, sample_rate: f32, state: &Arc<Mutex<PassthroughState>>) {
+    let channels = channels.max(1);
+    let mut locked = state.lock().unwrap();
+    for frame in data.chunks_mut(channels) {
+        let mono = locked.next_sample(sample_rate);
+        for sample in frame {
+            *sample = T::from_f32(mono);
+        }
     }
 }
 
@@ -271,11 +340,11 @@ fn find_input_device(requested_id: &str) -> Result<Option<cpal::Device>> {
 }
 
 fn is_vb_cable_input(lower_name: &str) -> bool {
-    lower_name.contains("cable input") || (lower_name.contains("vb-audio") && lower_name.contains("input"))
+    lower_name.contains("cable input") || lower_name.contains("cable in") || (lower_name.contains("vb-audio") && lower_name.contains("input"))
 }
 
 fn is_vb_cable_output(lower_name: &str) -> bool {
-    lower_name.contains("cable output") || (lower_name.contains("vb-audio") && lower_name.contains("output"))
+    lower_name.contains("cable output") || lower_name.contains("cable out") || (lower_name.contains("vb-audio") && lower_name.contains("output"))
 }
 
 fn device_id(name: &str, index: usize) -> String {
