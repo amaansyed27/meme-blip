@@ -85,7 +85,7 @@ export function Hotkeys() {
 
       <section className="ptt-note">
         <strong>Valorant flow</strong>
-        <span>Hold <kbd>V</kbd>, press <kbd>F1</kbd>–<kbd>F8</kbd>, release after the clip starts.</span>
+        <span>Run companion as Admin. Hold <kbd>V</kbd>, press <kbd>F1</kbd>–<kbd>F8</kbd>, then release after the clip starts.</span>
       </section>
 
       <section className="preset-row">
