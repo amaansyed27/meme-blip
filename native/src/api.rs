@@ -1,4 +1,4 @@
-use crate::{audio::AudioEngine, models::{AssignHotkeyRequest, HealthResponse, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
+use crate::{audio::AudioEngine, models::{AssignHotkeyRequest, HealthResponse, SetMonitorDeviceRequest, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
 use anyhow::{anyhow, Result};
 use axum::{extract::{Multipart, Path, State}, http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::{get, patch, post}, Json, Router};
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -35,6 +35,7 @@ pub async fn serve(storage: Storage, audio: AudioEngine) -> Result<()> {
         .route("/devices/test", post(test_device))
         .route("/settings", get(get_settings))
         .route("/settings/output-device", post(set_output_device))
+        .route("/settings/monitor-device", post(set_monitor_device))
         .route("/updates/check", get(check_update))
         .route("/updates/download", post(download_update))
         .fallback_service(ServeDir::new(static_dir()))
@@ -72,7 +73,7 @@ async fn list_boards(State(state): State<Arc<AppState>>, headers: HeaderMap) -> 
 async fn list_devices(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<crate::models::AudioDevice>>, ApiError> {
     verify(&headers, &state)?;
     let settings = state.storage.settings();
-    Ok(Json(state.audio.devices(settings.output_device_id)?))
+    Ok(Json(state.audio.devices(settings.output_device_id, settings.monitor_device_id)?))
 }
 
 async fn test_device(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<serde_json::Value>, ApiError> {
@@ -90,6 +91,13 @@ async fn set_output_device(State(state): State<Arc<AppState>>, headers: HeaderMa
     verify(&headers, &state)?;
     let mut settings = state.storage.settings();
     settings.output_device_id = Some(payload.device_id);
+    Ok(Json(state.storage.set_settings(settings)?))
+}
+
+async fn set_monitor_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMonitorDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> {
+    verify(&headers, &state)?;
+    let mut settings = state.storage.settings();
+    settings.monitor_device_id = payload.device_id;
     Ok(Json(state.storage.set_settings(settings)?))
 }
 
@@ -153,7 +161,7 @@ async fn play_sound(State(state): State<Arc<AppState>>, headers: HeaderMap, Path
     verify(&headers, &state)?;
     let sound = state.storage.find_sound(&id).ok_or_else(|| anyhow!("sound not found"))?;
     let settings = state.storage.settings();
-    state.audio.play(&sound, settings.output_device_id)?;
+    state.audio.play(&sound, settings.output_device_id, settings.monitor_device_id)?;
     Ok(Json(sound))
 }
 
