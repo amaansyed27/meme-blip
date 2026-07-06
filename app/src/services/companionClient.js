@@ -35,6 +35,8 @@ export const companionClient = {
   sounds: () => request('/sounds'),
   boards: () => request('/boards'),
   devices: () => request('/devices'),
+  inputDevices: () => request('/devices/inputs'),
+  mixerStatus: () => request('/mixer/status'),
   settings: () => request('/settings'),
   checkUpdate: () => request('/updates/check'),
   downloadUpdate: () => request('/updates/download', { method: 'POST' }),
@@ -53,5 +55,7 @@ export const companionClient = {
   stopAll: () => request('/sounds/stop-all', { method: 'POST' }),
   setOutputDevice: (deviceId) => request('/settings/output-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
   setMonitorDevice: (deviceId) => request('/settings/monitor-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
+  setInputDevice: (deviceId) => request('/settings/input-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
+  setMicPassthrough: (enabled) => request('/settings/mic-passthrough', { method: 'POST', body: JSON.stringify({ enabled }) }),
   assignHotkey: (soundId, hotkey) => request(`/sounds/${soundId}/hotkey`, { method: 'POST', body: JSON.stringify({ hotkey }) })
 };
