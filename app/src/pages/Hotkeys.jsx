@@ -6,9 +6,9 @@ import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 const presets = [
   {
     id: 'valorant',
-    name: 'Valorant safe',
+    name: 'Valorant PTT',
     icon: Gamepad2,
-    keys: ['Ctrl + Shift + F1', 'Ctrl + Shift + F2', 'Ctrl + Shift + F3', 'Ctrl + Shift + F4', 'Ctrl + Shift + F5', 'Ctrl + Shift + F6', 'Ctrl + Shift + F7', 'Ctrl + Shift + F8']
+    keys: ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8']
   },
   {
     id: 'meeting',
@@ -79,9 +79,14 @@ export function Hotkeys() {
       <PageHeader
         eyebrow="Shortcuts"
         title="Hotkeys"
-        description="Pick a preset or click Record and press a combo."
+        description="For Valorant, hold your voice key first, then press the MemeBlip hotkey."
         action={<button className="subtle-button" onClick={clearAll}><RotateCcw size={16} /> Clear</button>}
       />
+
+      <section className="ptt-note">
+        <strong>Valorant flow</strong>
+        <span>Hold <kbd>V</kbd>, press <kbd>F1</kbd>–<kbd>F8</kbd>, release after the clip starts.</span>
+      </section>
 
       <section className="preset-row">
         {presets.map((preset) => {
