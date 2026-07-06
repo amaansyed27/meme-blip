@@ -6,9 +6,9 @@ import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 const presets = [
   {
     id: 'valorant',
-    name: 'Valorant',
+    name: 'Valorant safe',
     icon: Gamepad2,
-    keys: ['Alt + F1', 'Alt + F2', 'Alt + F3', 'Alt + F4', 'Alt + F5', 'Alt + F6', 'Alt + F7', 'Alt + F8']
+    keys: ['Ctrl + Shift + F1', 'Ctrl + Shift + F2', 'Ctrl + Shift + F3', 'Ctrl + Shift + F4', 'Ctrl + Shift + F5', 'Ctrl + Shift + F6', 'Ctrl + Shift + F7', 'Ctrl + Shift + F8']
   },
   {
     id: 'meeting',
