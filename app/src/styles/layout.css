@@ -1,0 +1,79 @@
+body { margin: 0; min-width: 1040px; min-height: 100vh; overflow: hidden; }
+button, input { font: inherit; }
+button { border: 0; cursor: pointer; color: inherit; }
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100vh;
+  padding: 10px;
+  gap: 10px;
+}
+
+.sidebar {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+}
+
+.brand:hover { background: rgba(255,255,255,.04); }
+.brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; background: var(--mint); color: #07130e; font-size: 12px; font-weight: 900; }
+.brand strong, .brand small { display: block; }
+.brand strong { font-size: 13px; }
+.brand small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+nav { display: grid; gap: 3px; margin-top: 20px; }
+.nav-item { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 9px; border-radius: 6px; background: transparent; font-size: 13px; transition: 140ms ease; }
+
+.sidebar-card { margin-top: auto; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.sidebar-card p { margin: 0 0 8px; color: var(--muted); font-size: 11px; }
+.sidebar-card strong { display: flex; align-items: center; gap: 8px; color: var(--mint); }
+.sidebar-card span { display: block; margin-top: 7px; color: var(--soft); font-size: 11px; line-height: 1.35; }
+.sidebar-card.offline { border-color: rgba(213,111,111,.24); background: rgba(213,111,111,.05); }
+.sidebar-card.offline strong { color: var(--red); }
+.sidebar-card small { display: block; margin-top: 6px; color: var(--red); line-height: 1.35; }
+
+.workspace { min-width: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.topbar { height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.search-box { flex: 1; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 7px; font-size: 12px; }
+.search-box input { flex: 1; border: 0; outline: 0; background: transparent; }
+.search-box kbd, .hotkey-row kbd { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 5px; padding: 4px 7px; color: var(--soft); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.icon-button { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 7px; transition: 140ms ease; }
+.primary-button, .subtle-button, .danger-soft { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; padding: 0 12px; border-radius: 7px; font-size: 12px; font-weight: 700; transition: 140ms ease; }
+
+.page { height: calc(100vh - 54px); overflow: auto; padding: 18px; }
+.page::-webkit-scrollbar { width: 8px; }
+.page::-webkit-scrollbar-thumb { background: rgba(255,255,255,.11); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.eyebrow { margin: 0 0 6px; color: var(--mint); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; }
+h1 { max-width: 760px; margin: 0; font-size: clamp(24px, 2.4vw, 34px); line-height: 1; letter-spacing: -.04em; }
+h2 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+h3 { margin: 0; font-size: 13px; }
+.page-description { max-width: 480px; margin: 8px 0 0; color: var(--soft); line-height: 1.45; font-size: 12px; }
+
+.metric-grid, .split-grid, .routing-grid { gap: 10px; margin-bottom: 10px; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.split-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(300px, .8fr); }
+.panel, .metric-card, .board-card, .setting-card, .toolbar-panel, .hotkey-row { border: 1px solid var(--line); border-radius: 8px; }
+.panel { padding: 14px; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.metric-card { padding: 14px; }
+.metric-card p, .metric-card span { margin: 0; color: var(--muted); }
+.metric-card strong { display: block; margin: 6px 0 4px; font-size: 24px; letter-spacing: -.04em; }
+
+@media (max-width: 1180px) {
+  .app-shell { grid-template-columns: 190px 1fr; }
+}
