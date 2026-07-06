@@ -62,9 +62,28 @@ export const useMemeBlipStore = create((set, get) => ({
   },
   setSelectedDevice: async (selectedDeviceId) => {
     set({ selectedDeviceId });
-    try { await companionClient.setOutputDevice(selectedDeviceId); } catch (error) { set({ error: error.message }); }
+    try {
+      await companionClient.setOutputDevice(selectedDeviceId);
+      const devices = await companionClient.devices();
+      set({ devices });
+    } catch (error) { set({ error: error.message }); }
   },
-  setMonitorDevice: (monitorDeviceId) => set({ monitorDeviceId }),
+  setMonitorDevice: async (monitorDeviceId) => {
+    set({ monitorDeviceId });
+    try {
+      await companionClient.setMonitorDevice(monitorDeviceId);
+      const devices = await companionClient.devices();
+      set({ devices });
+    } catch (error) { set({ error: error.message }); }
+  },
+  clearMonitorDevice: async () => {
+    set({ monitorDeviceId: null });
+    try {
+      await companionClient.setMonitorDevice(null);
+      const devices = await companionClient.devices();
+      set({ devices });
+    } catch (error) { set({ error: error.message }); }
+  },
   toggleMute: () => set((state) => ({ muted: !state.muted })),
   playSound: async (id) => {
     if (get().muted) return;
