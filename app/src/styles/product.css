@@ -74,12 +74,15 @@ h3 { font-size: 13px; }
 .toggle-row span { font-size: 12px; font-weight: 700; }
 .toggle-row small { color: var(--muted); font-size: 11px; }
 .system-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.system-card { min-height: 78px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,0.04); text-align: left; transition: 160ms ease; }
+.system-card { min-height: 72px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,0.04); text-align: left; transition: 160ms ease; }
 .system-card:hover { border-color: rgba(125,255,196,.24); background: rgba(125,255,196,.075); }
 .system-card.primary { background: rgba(125,255,196,.1); border-color: rgba(125,255,196,.28); }
+.system-card.muted { opacity: .72; }
 .system-card strong, .system-card span { display: block; }
 .system-card strong { font-size: 13px; margin-bottom: 5px; }
 .system-card span { color: var(--soft); font-size: 11px; line-height: 1.35; }
+.experimental-panel { border-color: rgba(255,216,107,.18); background: linear-gradient(180deg, rgba(255,216,107,.045), rgba(255,255,255,.025)); }
+.micro-note { margin: -2px 0 8px; color: var(--muted); font-size: 11px; line-height: 1.35; }
 .tiny-warning { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
 .routing-mini-guide { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .routing-mini-guide span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.035); color: var(--soft); font-size: 12px; }
