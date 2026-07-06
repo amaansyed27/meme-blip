@@ -1,4 +1,8 @@
 use std::{path::PathBuf, thread};
+use tao::{
+    event::{Event, StartCause},
+    event_loop::{ControlFlow, EventLoopBuilder},
+};
 use tray_icon::{menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem}, Icon, TrayIconBuilder};
 
 pub fn spawn_dashboard_tray() {
@@ -10,37 +14,45 @@ pub fn spawn_dashboard_tray() {
 }
 
 fn run_tray() -> Result<(), Box<dyn std::error::Error>> {
+    let event_loop = EventLoopBuilder::new().build();
+
     let menu = Menu::new();
     let open_dashboard = MenuItem::new("Open Dashboard", true, None);
     let open_api = MenuItem::new("Open API Health", true, None);
-    let quit = MenuItem::new("Quit", true, None);
+    let quit = MenuItem::new("Quit MemeBlip", true, None);
     menu.append(&open_dashboard)?;
     menu.append(&open_api)?;
     menu.append(&PredefinedMenuItem::separator())?;
     menu.append(&quit)?;
 
     let _tray = TrayIconBuilder::new()
-        .with_tooltip("MemeBlip - left click for menu")
+        .with_tooltip("MemeBlip")
         .with_menu(Box::new(menu))
         .with_menu_on_left_click(true)
         .with_icon(make_icon()?)
         .build()?;
 
-    println!("MemeBlip tray ready. Open dashboard: {}", dashboard_url());
+    println!("MemeBlip tray ready. Dashboard: {}", dashboard_url());
 
-    let menu_channel = MenuEvent::receiver();
-    while let Ok(event) = menu_channel.recv() {
-        if event.id == open_dashboard.id() {
-            let _ = open::that(dashboard_url());
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        if let Ok(menu_event) = MenuEvent::receiver().try_recv() {
+            if menu_event.id == open_dashboard.id() {
+                let _ = open::that(dashboard_url());
+            }
+            if menu_event.id == open_api.id() {
+                let _ = open::that("http://127.0.0.1:48322/health");
+            }
+            if menu_event.id == quit.id() {
+                std::process::exit(0);
+            }
         }
-        if event.id == open_api.id() {
-            let _ = open::that("http://127.0.0.1:48322/health");
+
+        if let Event::NewEvents(StartCause::Init) = event {
+            println!("MemeBlip tray event loop started");
         }
-        if event.id == quit.id() {
-            break;
-        }
-    }
-    Ok(())
+    });
 }
 
 fn dashboard_url() -> &'static str {
