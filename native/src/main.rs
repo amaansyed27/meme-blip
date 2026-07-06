@@ -2,7 +2,6 @@ mod api;
 mod audio;
 mod hotkeys;
 mod models;
-mod settings;
 mod storage;
 mod tray;
 mod updater;
