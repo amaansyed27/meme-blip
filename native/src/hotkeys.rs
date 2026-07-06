@@ -38,7 +38,7 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
                 if let Some(sound_id) = bindings.get(&event.id) {
                     if let Some(sound) = storage.find_sound(sound_id) {
                         let settings = storage.settings();
-                        let _ = audio.play(&sound, settings.output_device_id);
+                        let _ = audio.play(&sound, settings.output_device_id, settings.monitor_device_id);
                     }
                 }
             }
