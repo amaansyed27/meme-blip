@@ -112,12 +112,6 @@ export const useMemeBlipStore = create((set, get) => ({
       set({ mixerStatus });
     } catch (error) { set({ error: error.message }); }
   },
-  openSystemAudioApps: async () => {
-    try { await companionClient.openSystemAudioApps(); } catch (error) { set({ error: error.message }); }
-  },
-  openSystemAudioAll: async () => {
-    try { await companionClient.openSystemAudioAll(); } catch (error) { set({ error: error.message }); }
-  },
   toggleMute: () => set((state) => ({ muted: !state.muted })),
   playSound: async (id) => {
     if (get().muted) return;
