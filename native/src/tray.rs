@@ -3,6 +3,8 @@ use tao::{
     event::{Event, StartCause},
     event_loop::{ControlFlow, EventLoopBuilder},
 };
+#[cfg(target_os = "windows")]
+use tao::platform::windows::EventLoopBuilderExtWindows;
 use tray_icon::{menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem}, Icon, TrayIconBuilder};
 
 pub fn spawn_dashboard_tray() {
@@ -14,16 +16,19 @@ pub fn spawn_dashboard_tray() {
 }
 
 fn run_tray() -> Result<(), Box<dyn std::error::Error>> {
-    let event_loop = EventLoopBuilder::new().build();
+    let mut event_loop_builder = EventLoopBuilder::new();
+    #[cfg(target_os = "windows")]
+    event_loop_builder.with_any_thread(true);
+    let event_loop = event_loop_builder.build();
 
     let menu = Menu::new();
     let open_dashboard = MenuItem::new("Open Dashboard", true, None);
     let open_api = MenuItem::new("Open API Health", true, None);
-    let quit = MenuItem::new("Quit MemeBlip", true, None);
+    let close_app = MenuItem::new("Close MemeBlip", true, None);
     menu.append(&open_dashboard)?;
     menu.append(&open_api)?;
     menu.append(&PredefinedMenuItem::separator())?;
-    menu.append(&quit)?;
+    menu.append(&close_app)?;
 
     let _tray = TrayIconBuilder::new()
         .with_tooltip("MemeBlip")
@@ -37,14 +42,14 @@ fn run_tray() -> Result<(), Box<dyn std::error::Error>> {
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
-        if let Ok(menu_event) = MenuEvent::receiver().try_recv() {
+        while let Ok(menu_event) = MenuEvent::receiver().try_recv() {
             if menu_event.id == open_dashboard.id() {
                 let _ = open::that(dashboard_url());
             }
             if menu_event.id == open_api.id() {
                 let _ = open::that("http://127.0.0.1:48322/health");
             }
-            if menu_event.id == quit.id() {
+            if menu_event.id == close_app.id() {
                 std::process::exit(0);
             }
         }
