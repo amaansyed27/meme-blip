@@ -1,7 +1,20 @@
-import { Cable, CheckCircle2, Headphones, Mic2, MonitorSpeaker, Settings2 } from 'lucide-react';
+import { Cable, CheckCircle2, Headphones, Mic2, MonitorSpeaker } from 'lucide-react';
 import { DeviceCard } from '../components/DeviceCard.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
+
+function isStandardCableInput(device) {
+  const name = device.name.toLowerCase();
+  return name.includes('cable input') && !name.includes('16ch');
+}
+
+function routeRank(device) {
+  const name = device.name.toLowerCase();
+  if (isStandardCableInput(device)) return 0;
+  if (name.includes('cable') && name.includes('16ch')) return 3;
+  if (name.includes('cable input')) return 1;
+  return 2;
+}
 
 export function AudioRouting() {
   const devices = useMemeBlipStore((state) => state.devices);
@@ -17,19 +30,20 @@ export function AudioRouting() {
   const clearMonitorDevice = useMemeBlipStore((state) => state.clearMonitorDevice);
   const openSystemAudioApps = useMemeBlipStore((state) => state.openSystemAudioApps);
   const openSystemAudioAll = useMemeBlipStore((state) => state.openSystemAudioAll);
+  const routeDevices = [...devices].sort((a, b) => routeRank(a) - routeRank(b));
 
   return (
     <>
       <PageHeader
         eyebrow="Audio"
         title="Routing"
-        description="Mic, memes, and optional system audio into one call input."
+        description="Stable mode: mic + uploaded clips. System audio is experimental."
       />
 
       <section className="routing-status-strip">
-        <div><Mic2 size={15} /><span>Mic → CABLE Input</span></div>
-        <div><Cable size={15} /><span>Call mic: CABLE Output</span></div>
-        <div><Headphones size={15} /><span>Speaker stays HyperX</span></div>
+        <div><Mic2 size={15} /><span>Mic passthrough</span></div>
+        <div><Cable size={15} /><span>CABLE Input → CABLE Output</span></div>
+        <div><Headphones size={15} /><span>Monitor: HyperX</span></div>
       </section>
 
       <section className="routing-compact-grid">
@@ -43,12 +57,13 @@ export function AudioRouting() {
         </div>
 
         <div className="panel compact-panel">
-          <PanelTitle icon={<Cable size={18} />} title="Route" hint="Select CABLE Input" />
-          <div className="device-list compact-list">{devices.map((device) => <DeviceCard key={'route-' + device.id} device={device} selected={selectedDeviceId === device.id} onSelect={setSelectedDevice} />)}</div>
+          <PanelTitle icon={<Cable size={18} />} title="Route" hint="Use normal CABLE Input" />
+          <p className="micro-note">Avoid the 16ch cable for now.</p>
+          <div className="device-list compact-list">{routeDevices.map((device) => <DeviceCard key={'route-' + device.id} device={device} selected={selectedDeviceId === device.id} onSelect={setSelectedDevice} />)}</div>
         </div>
 
         <div className="panel compact-panel">
-          <PanelTitle icon={<Headphones size={18} />} title="Monitor" hint="Optional preview" />
+          <PanelTitle icon={<Headphones size={18} />} title="Monitor" hint="What you hear" />
           <button className={!monitorDeviceId ? 'toggle-row selected' : 'toggle-row'} onClick={clearMonitorDevice}>
             <span>No monitor</span>
             <small>Silent locally</small>
@@ -56,26 +71,27 @@ export function AudioRouting() {
           <div className="device-list compact-list">{devices.map((device) => <DeviceCard key={'monitor-' + device.id} device={device} selected={monitorDeviceId === device.id} onSelect={setMonitorDevice} />)}</div>
         </div>
 
-        <div className="panel compact-panel system-panel">
-          <PanelTitle icon={<MonitorSpeaker size={18} />} title="System audio" hint="Send app sound to call" />
+        <div className="panel compact-panel system-panel experimental-panel">
+          <PanelTitle icon={<MonitorSpeaker size={18} />} title="System audio" hint="Experimental" />
+          <p className="micro-note">VB-CABLE sends this to the call, but may not monitor cleanly to your headphones.</p>
           <div className="system-actions">
-            <button className="system-card primary" onClick={openSystemAudioApps}>
+            <button className="system-card" onClick={openSystemAudioApps}>
               <strong>App audio</strong>
-              <span>Pick browser/game → CABLE Input</span>
+              <span>Route one app to CABLE Input</span>
             </button>
-            <button className="system-card" onClick={openSystemAudioAll}>
+            <button className="system-card muted" onClick={openSystemAudioAll}>
               <strong>All system</strong>
-              <span>Everything → CABLE Input</span>
+              <span>Risky. Echo likely.</span>
             </button>
           </div>
-          <p className="tiny-warning">Keep Meet/Discord speakers on HyperX to avoid echo.</p>
+          <p className="tiny-warning">Best reliable method: upload clips into MemeBlip. That plays to both the call and your headphones.</p>
         </div>
       </section>
 
       <section className="routing-mini-guide">
-        <span><CheckCircle2 size={14} /> MemeBlip route: CABLE Input</span>
-        <span><CheckCircle2 size={14} /> Call microphone: CABLE Output</span>
-        <span><CheckCircle2 size={14} /> Call speaker: HyperX</span>
+        <span><CheckCircle2 size={14} /> Route: normal CABLE Input</span>
+        <span><CheckCircle2 size={14} /> Call mic: CABLE Output</span>
+        <span><CheckCircle2 size={14} /> Clip audio: reliable monitor</span>
       </section>
     </>
   );
