@@ -1,6 +1,5 @@
-use anyhow::{anyhow, Result};
 use serde::Serialize;
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,29 +22,6 @@ pub fn status() -> DriverStatus {
         workspace_path: workspace.to_string_lossy().to_string(),
         package_path: package.to_string_lossy().to_string(),
     }
-}
-
-pub fn open_script(script: &str, elevated: bool) -> Result<()> {
-    let root = repo_root();
-    let script_path = root.join("driver").join("scripts").join(script);
-    if !script_path.exists() {
-        return Err(anyhow!("driver script not found: {}", script_path.display()));
-    }
-
-    let mut args = format!("-ExecutionPolicy Bypass -File \"{}\"", script_path.display());
-    if elevated {
-        args = format!("-NoExit {}", args);
-        Command::new("powershell")
-            .args(["-Command", "Start-Process", "powershell", "-Verb", "RunAs", "-ArgumentList", &args])
-            .spawn()?;
-    } else {
-        Command::new("powershell")
-            .args(["-NoExit", "-ExecutionPolicy", "Bypass", "-File"])
-            .arg(script_path)
-            .spawn()?;
-    }
-
-    Ok(())
 }
 
 fn repo_root() -> PathBuf {
