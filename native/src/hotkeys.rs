@@ -34,14 +34,24 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
 
     loop {
         if last_scan.elapsed() >= Duration::from_secs(2) {
-            let signature = storage.sounds().iter().map(|sound| format!("{}:{}", sound.id, sound.key)).collect::<Vec<_>>().join("|");
+            let settings = storage.settings();
+            let active_board = settings.active_board.clone();
+            let sound_signature = storage.sounds().iter().map(|sound| format!("{}:{}:{}", sound.id, sound.board, sound.key)).collect::<Vec<_>>().join("|");
+            let signature = format!("active={:?}|{}", active_board, sound_signature);
+
             if signature != last_seen {
                 bindings.clear();
                 let mut registered_count = 0;
 
                 for sound in storage.sounds() {
+                    if let Some(board) = &active_board {
+                        if sound.board != *board {
+                            continue;
+                        }
+                    }
+
                     if let Some(combo) = parse_hotkey(&sound.key) {
-                        println!("Registered hotkey: {} -> {}", combo.label, sound.name);
+                        println!("Registered hotkey: {} -> {} [{}]", combo.label, sound.name, sound.board);
                         bindings.insert(combo, sound.id.clone());
                         registered_count += 1;
                     } else if !sound.key.eq_ignore_ascii_case("unassigned") {
@@ -50,7 +60,7 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
                 }
 
                 pressed.clear();
-                println!("Hotkey map reloaded: {registered_count} active bindings");
+                println!("Hotkey map reloaded: {registered_count} active bindings. Active board: {}", active_board.unwrap_or_else(|| String::from("All boards")));
                 last_seen = signature;
             }
             last_scan = Instant::now();
