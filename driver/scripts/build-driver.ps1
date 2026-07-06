@@ -4,6 +4,8 @@ $Root = Resolve-Path "$PSScriptRoot\..\.."
 $SysvadDir = Join-Path $Root "driver\vendor\Windows-driver-samples\audio\sysvad"
 $Solution = Join-Path $SysvadDir "sysvad.sln"
 $OutDir = Join-Path $Root "driver\out"
+$PackageSource = Join-Path $SysvadDir "x64\Debug\package"
+$PackageTarget = Join-Path $OutDir "memeblip-virtual-mic"
 
 function Find-MSBuild {
   $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
@@ -65,5 +67,16 @@ if ($LASTEXITCODE -ne 0) {
   throw "MSBuild failed with exit code $LASTEXITCODE. The driver package was not built."
 }
 
-Write-Host "Driver build finished. Inspect SysVAD package output under: $SysvadDir"
-Write-Host "Copy the built package into driver/out/memeblip-virtual-mic before install if needed."
+if (!(Test-Path $PackageSource)) {
+  throw "MSBuild succeeded but package output was not found: $PackageSource"
+}
+
+if (Test-Path $PackageTarget) {
+  Remove-Item -Recurse -Force $PackageTarget
+}
+New-Item -ItemType Directory -Force -Path $PackageTarget | Out-Null
+Copy-Item -Recurse -Force (Join-Path $PackageSource "*") $PackageTarget
+
+Write-Host "Driver build finished."
+Write-Host "Package copied to: $PackageTarget"
+Write-Host "Next: npm run driver:install from elevated PowerShell."
