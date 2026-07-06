@@ -6,6 +6,7 @@ $Solution = Join-Path $SysvadDir "sysvad.sln"
 $OutDir = Join-Path $Root "driver\out"
 $PackageSource = Join-Path $SysvadDir "x64\Debug\package"
 $PackageTarget = Join-Path $OutDir "memeblip-virtual-mic"
+$BuildLog = Join-Path $OutDir "driver-build.log"
 
 function Find-MSBuild {
   $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
@@ -40,6 +41,14 @@ function Test-WdkHeaders {
   return [bool]($wdm -and $portcls)
 }
 
+function Copy-PackageIfPresent {
+  if (!(Test-Path $PackageSource)) { return $false }
+  if (Test-Path $PackageTarget) { Remove-Item -Recurse -Force $PackageTarget }
+  New-Item -ItemType Directory -Force -Path $PackageTarget | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $PackageSource "*") $PackageTarget
+  return $true
+}
+
 if (!(Test-Path $Solution)) {
   throw "SysVAD solution not found. Run npm run driver:bootstrap first."
 }
@@ -61,22 +70,29 @@ if (!(Test-WdkHeaders)) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+if (Test-Path $BuildLog) { Remove-Item -Force $BuildLog }
+
 Write-Host "Using MSBuild: $msbuild"
-& $msbuild $Solution /m /p:Configuration=Debug /p:Platform=x64
-if ($LASTEXITCODE -ne 0) {
-  throw "MSBuild failed with exit code $LASTEXITCODE. The driver package was not built."
+& $msbuild $Solution /m /p:Configuration=Debug /p:Platform=x64 2>&1 | Tee-Object -FilePath $BuildLog
+$exitCode = $LASTEXITCODE
+$logText = Get-Content $BuildLog -Raw
+$hasBuildFailure = $logText -match "Build FAILED" -or $logText -match "\berror\s+[A-Z]*\d*:" -or $logText -match "\berror\s*:"
+
+if ($exitCode -ne 0 -or $hasBuildFailure) {
+  $copied = Copy-PackageIfPresent
+  if ($copied) {
+    Write-Host "Partial driver package copied to: $PackageTarget" -ForegroundColor Yellow
+  }
+  Write-Host "MSBuild reported errors. This is not a clean driver build." -ForegroundColor Red
+  Write-Host "Most likely current blocker: broken/missing WDK InfVerif tooling." -ForegroundColor Red
+  Write-Host "Run: npm run driver:check-wdk"
+  throw "Driver build failed. See log: $BuildLog"
 }
 
-if (!(Test-Path $PackageSource)) {
+if (!(Copy-PackageIfPresent)) {
   throw "MSBuild succeeded but package output was not found: $PackageSource"
 }
 
-if (Test-Path $PackageTarget) {
-  Remove-Item -Recurse -Force $PackageTarget
-}
-New-Item -ItemType Directory -Force -Path $PackageTarget | Out-Null
-Copy-Item -Recurse -Force (Join-Path $PackageSource "*") $PackageTarget
-
-Write-Host "Driver build finished."
+Write-Host "Driver build finished cleanly."
 Write-Host "Package copied to: $PackageTarget"
 Write-Host "Next: npm run driver:install from elevated PowerShell."
