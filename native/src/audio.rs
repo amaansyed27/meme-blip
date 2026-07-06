@@ -26,8 +26,12 @@ impl AudioEngine {
         Self { tx }
     }
 
-    pub fn devices(&self, output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
+    pub fn output_devices(&self, output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
         list_output_devices(output_device_id, monitor_device_id)
+    }
+
+    pub fn input_devices(&self, input_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
+        list_input_devices(input_device_id)
     }
 
     pub fn play(&self, sound: &SoundClip, output_device_id: Option<String>, monitor_device_id: Option<String>) -> Result<()> {
@@ -48,7 +52,7 @@ fn audio_worker(rx: mpsc::Receiver<AudioCommand>) {
         match command {
             AudioCommand::Play { sound, output_device_id, monitor_device_id } => {
                 if let Err(error) = play_now(&sound, output_device_id, &mut active_sinks) {
-                    eprintln!("route playback error: {error}");
+                    eprintln!("virtual route playback error: {error}");
                 }
                 if let Some(monitor_id) = monitor_device_id {
                     if let Err(error) = play_now(&sound, Some(monitor_id), &mut active_sinks) {
@@ -94,18 +98,35 @@ fn list_output_devices(output_device_id: Option<String>, monitor_device_id: Opti
         let name = device.name().unwrap_or_else(|_| format!("Output device {index}"));
         let id = device_id(&name, index);
         let status = if output_device_id.as_deref() == Some(id.as_str()) {
-            "Mic route"
+            "Meme route"
         } else if monitor_device_id.as_deref() == Some(id.as_str()) {
             "Monitor"
         } else {
             "Available"
         };
         let lower = name.to_lowercase();
-        let device_type = if lower.contains("cable") || lower.contains("blackhole") || lower.contains("voicemeeter") {
-            "Virtual route"
+        let device_type = if lower.contains("memeblip") || lower.contains("virtual") {
+            "MemeBlip route"
         } else {
-            "Output"
+            "Speaker output"
         };
+        result.push(AudioDevice { id, name, device_type: device_type.to_string(), status: status.to_string() });
+    }
+
+    Ok(result)
+}
+
+fn list_input_devices(input_device_id: Option<String>) -> Result<Vec<AudioDevice>> {
+    let host = cpal::default_host();
+    let devices = host.input_devices().context("could not enumerate input devices")?;
+    let mut result = Vec::new();
+
+    for (index, device) in devices.enumerate() {
+        let name = device.name().unwrap_or_else(|_| format!("Input device {index}"));
+        let id = device_id(&name, index);
+        let status = if input_device_id.as_deref() == Some(id.as_str()) { "Voice source" } else { "Available" };
+        let lower = name.to_lowercase();
+        let device_type = if lower.contains("microphone") || lower.contains("mic") { "Physical mic" } else { "Input" };
         result.push(AudioDevice { id, name, device_type: device_type.to_string(), status: status.to_string() });
     }
 
