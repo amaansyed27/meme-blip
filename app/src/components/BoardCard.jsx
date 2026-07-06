@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion';
-import { Gamepad2 } from 'lucide-react';
+import { CheckCircle2, Gamepad2 } from 'lucide-react';
 
-export function BoardCard({ board }) {
+export function BoardCard({ board, active = false, onActivate }) {
   return (
-    <motion.article className={'board-card ' + board.accent} whileHover={{ y: -5, rotateX: 2 }}>
-      <div className="board-icon"><Gamepad2 size={20} /></div>
+    <motion.button className={active ? 'board-card active-board ' + board.accent : 'board-card ' + board.accent} onClick={() => onActivate(board.name)} whileHover={{ y: -2 }}>
+      <div className="board-card-top">
+        <div className="board-icon"><Gamepad2 size={19} /></div>
+        {active ? <span className="active-board-pill"><CheckCircle2 size={13} /> Active</span> : null}
+      </div>
       <h3>{board.name}</h3>
       <p>{board.mode}</p>
-      <span>{board.sounds} sounds</span>
-    </motion.article>
+      <span>{active ? 'Hotkeys scoped to this board' : 'Click to activate'}</span>
+    </motion.button>
   );
 }
