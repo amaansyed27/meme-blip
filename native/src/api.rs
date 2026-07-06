@@ -30,8 +30,6 @@ pub async fn serve(storage: Storage, audio: AudioEngine) -> Result<()> {
         .route("/devices/test", post(test_device))
         .route("/driver/status", get(driver_status))
         .route("/mixer/status", get(mixer_status))
-        .route("/system-audio/apps", post(open_system_audio_apps))
-        .route("/system-audio/all", post(open_system_audio_all))
         .route("/settings", get(get_settings))
         .route("/settings/output-device", post(set_output_device))
         .route("/settings/monitor-device", post(set_monitor_device))
@@ -75,8 +73,6 @@ async fn set_output_device(State(state): State<Arc<AppState>>, headers: HeaderMa
 async fn set_monitor_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMonitorDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.monitor_device_id = payload.device_id; Ok(Json(state.storage.set_settings(settings)?)) }
 async fn set_input_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetInputDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.input_device_id = payload.device_id; let saved = state.storage.set_settings(settings)?; apply_mic_passthrough(&state)?; Ok(Json(saved)) }
 async fn set_mic_passthrough(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMicPassthroughRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.mic_passthrough_enabled = payload.enabled; let saved = state.storage.set_settings(settings)?; apply_mic_passthrough(&state)?; Ok(Json(saved)) }
-async fn open_system_audio_apps(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<serde_json::Value>, ApiError> { verify(&headers, &state)?; open::that("ms-settings:apps-volume")?; Ok(Json(serde_json::json!({ "ok": true, "mode": "apps" }))) }
-async fn open_system_audio_all(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<serde_json::Value>, ApiError> { verify(&headers, &state)?; open::that("ms-settings:sound")?; Ok(Json(serde_json::json!({ "ok": true, "mode": "all" }))) }
 
 async fn import_sound(State(state): State<Arc<AppState>>, headers: HeaderMap, mut multipart: Multipart) -> Result<Json<SoundClip>, ApiError> {
     verify(&headers, &state)?;
