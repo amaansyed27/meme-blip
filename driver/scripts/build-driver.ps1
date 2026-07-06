@@ -30,6 +30,14 @@ function Find-MSBuild {
   return ($candidates | Where-Object { Test-Path $_ } | Select-Object -First 1)
 }
 
+function Test-WdkHeaders {
+  $kitsRoot = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\Include"
+  if (!(Test-Path $kitsRoot)) { return $false }
+  $wdm = Get-ChildItem $kitsRoot -Filter "wdm.h" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+  $portcls = Get-ChildItem $kitsRoot -Filter "portcls.h" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+  return [bool]($wdm -and $portcls)
+}
+
 if (!(Test-Path $Solution)) {
   throw "SysVAD solution not found. Run npm run driver:bootstrap first."
 }
@@ -43,9 +51,19 @@ if (!$msbuild) {
   throw "Missing Visual Studio MSBuild / C++ driver build environment."
 }
 
+if (!(Test-WdkHeaders)) {
+  Write-Host "WDK kernel headers were not found. Missing files include wdm.h and/or portcls.h." -ForegroundColor Red
+  Write-Host "Install the Windows Driver Kit and make sure its Visual Studio integration is selected."
+  Write-Host "After install, close/reopen PowerShell and rerun: npm run driver:build"
+  throw "Missing WDK kernel headers."
+}
+
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 Write-Host "Using MSBuild: $msbuild"
 & $msbuild $Solution /m /p:Configuration=Debug /p:Platform=x64
+if ($LASTEXITCODE -ne 0) {
+  throw "MSBuild failed with exit code $LASTEXITCODE. The driver package was not built."
+}
 
 Write-Host "Driver build finished. Inspect SysVAD package output under: $SysvadDir"
 Write-Host "Copy the built package into driver/out/memeblip-virtual-mic before install if needed."
