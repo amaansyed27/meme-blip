@@ -4,83 +4,23 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
-  padding: 11px 12px;
-  border: 1px solid rgba(125,255,196,.18);
-  border-radius: 13px;
+  padding: 10px 12px;
+  border: 1px solid rgba(143,232,188,.18);
+  border-radius: 6px;
   color: var(--soft);
-  background: rgba(125,255,196,.055);
+  background: rgba(143,232,188,.055);
   font-size: 12px;
 }
 
-.ptt-note strong {
-  color: white;
-  font-size: 12px;
-}
+.ptt-note strong { color: var(--text); font-size: 12px; }
+.ptt-note span { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ptt-note kbd { border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; color: var(--text); background: rgba(255,255,255,.05); font-size: 11px; }
 
-.ptt-note span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
+.preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.preset-card { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); background: rgba(255,255,255,.035); font-size: 12px; }
+.preset-card:hover { color: var(--text); border-color: rgba(143,232,188,.24); background: rgba(143,232,188,.075); }
 
-.ptt-note kbd {
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 2px 6px;
-  color: white;
-  background: rgba(255,255,255,.06);
-  font-size: 11px;
-}
-
-.preset-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.preset-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  color: var(--soft);
-  background: rgba(255,255,255,0.04);
-  font-size: 12px;
-}
-
-.preset-card:hover {
-  color: white;
-  border-color: rgba(125,255,196,.24);
-  background: rgba(125,255,196,.075);
-}
-
-.record-hotkey {
-  min-width: 132px;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  color: var(--soft);
-  background: rgba(255,255,255,0.045);
-  text-align: center;
-  font-size: 12px;
-}
-
+.record-hotkey { min-width: 132px; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 6px; color: var(--soft); background: rgba(255,255,255,.035); text-align: center; font-size: 12px; }
 .record-hotkey:hover,
-.record-hotkey:focus {
-  color: white;
-  border-color: rgba(125,255,196,.28);
-  outline: none;
-}
-
-.record-hotkey.recording {
-  color: #07100d;
-  border-color: rgba(125,255,196,.55);
-  background: linear-gradient(135deg, var(--mint), #dfffee);
-  font-weight: 800;
-}
+.record-hotkey:focus { color: var(--text); border-color: rgba(143,232,188,.28); outline: none; }
+.record-hotkey.recording { color: #07130e; border-color: rgba(143,232,188,.55); background: var(--mint); font-weight: 800; }
