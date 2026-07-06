@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { companionClient } from '../services/companionClient.js';
 
 function slugBoardName(name) {
-  return name.toLowerCase().split(' ').join('-');
+  return name.toLowerCase().trim().split(/\s+/).join('-');
 }
 
 function deriveBoards(sounds) {
@@ -15,7 +15,7 @@ function deriveBoards(sounds) {
     id: `board-${slugBoardName(name)}`,
     name,
     sounds,
-    mode: name.toLowerCase().includes('meeting') ? 'Meetings' : 'Custom',
+    mode: sounds === 1 ? '1 clip' : `${sounds} clips`,
     accent: ['mint', 'blue', 'gold'][index % 3]
   }));
 }
@@ -32,6 +32,7 @@ export const useMemeBlipStore = create((set, get) => ({
   error: null,
   muted: false,
   activeSoundId: null,
+  activeBoard: null,
   selectedDeviceId: null,
   monitorDeviceId: null,
   inputDeviceId: null,
@@ -62,6 +63,7 @@ export const useMemeBlipStore = create((set, get) => ({
         selectedDeviceId: settings.outputDeviceId || null,
         monitorDeviceId: settings.monitorDeviceId || null,
         inputDeviceId: settings.inputDeviceId || null,
+        activeBoard: settings.activeBoard || null,
         micPassthroughEnabled: settings.micPassthroughEnabled ?? true,
         mixerStatus,
         loading: false
@@ -75,6 +77,13 @@ export const useMemeBlipStore = create((set, get) => ({
     const inputDevices = await companionClient.inputDevices();
     const mixerStatus = await companionClient.mixerStatus();
     set({ devices, inputDevices, mixerStatus });
+  },
+  setActiveBoard: async (activeBoard) => {
+    set({ activeBoard });
+    try {
+      const settings = await companionClient.setActiveBoard(activeBoard);
+      set({ activeBoard: settings.activeBoard || null });
+    } catch (error) { set({ error: error.message }); }
   },
   setSelectedDevice: async (selectedDeviceId) => {
     set({ selectedDeviceId });
@@ -132,7 +141,7 @@ export const useMemeBlipStore = create((set, get) => ({
   importSound: async (file) => {
     set({ error: null });
     try {
-      const sound = await companionClient.importSound({ file, board: 'Meme Kit', volume: 80 });
+      const sound = await companionClient.importSound({ file, board: get().activeBoard || 'Meme Kit', volume: 80 });
       const sounds = [sound, ...get().sounds];
       set({ sounds, boards: deriveBoards(sounds) });
     } catch (error) {
