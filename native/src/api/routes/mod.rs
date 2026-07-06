@@ -2,7 +2,6 @@ pub mod devices;
 pub mod settings;
 pub mod sounds;
 pub mod system;
-pub mod updates;
 
 use axum::{routing::{get, patch, post}, Router};
 
@@ -29,6 +28,6 @@ pub(crate) fn router() -> Router<SharedState> {
         .route("/settings/input-device", post(settings::set_input_device))
         .route("/settings/active-board", post(settings::set_active_board))
         .route("/settings/mic-passthrough", post(settings::set_mic_passthrough))
-        .route("/updates/check", get(updates::check_update))
-        .route("/updates/download", post(updates::download_update))
+        .route("/updates/check", get(super::check_update))
+        .route("/updates/download", post(super::download_update))
 }
