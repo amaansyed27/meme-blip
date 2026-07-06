@@ -1,4 +1,4 @@
-import { Cable, CheckCircle2, Headphones, Mic2, TestTube2 } from 'lucide-react';
+import { Cable, CheckCircle2, Headphones, Mic2, MonitorSpeaker, TestTube2 } from 'lucide-react';
 import { DeviceCard } from '../components/DeviceCard.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
@@ -43,6 +43,16 @@ export function AudioRouting() {
           <button className={!monitorDeviceId ? 'device-card selected' : 'device-card'} onClick={clearMonitorDevice}><span>{!monitorDeviceId ? <CheckCircle2 size={18} /> : null}</span><div><strong>No monitor</strong><p>Do not preview sounds locally</p></div><small>Optional</small></button>
           <div className="device-list">{devices.map((device) => <DeviceCard key={'monitor-' + device.id} device={device} selected={monitorDeviceId === device.id} onSelect={setMonitorDevice} />)}</div>
         </div>
+      </section>
+      <section className="panel route-diagram setup-wide">
+        <h2><MonitorSpeaker size={20} /> System audio mode</h2>
+        <p className="muted-copy">To send laptop audio into the call, route the app or Windows output to <strong>CABLE Input</strong>. The call still listens to <strong>CABLE Output</strong>.</p>
+        <div className="route-step active"><CheckCircle2 size={16} /> Recommended: Windows Volume Mixer → app/browser/game output = CABLE Input</div>
+        <div className="route-line" />
+        <div className="route-step"><CheckCircle2 size={16} /> Keep Meet/Discord/Valorant speaker = HyperX speakers/headphones to avoid echo</div>
+        <div className="route-line" />
+        <div className="route-step"><CheckCircle2 size={16} /> All-system mode: Windows output = CABLE Input, but this can echo call audio if the call speaker also routes there</div>
+        <p className="muted-copy">Helper commands: <code>npm run system-audio:apps</code> for per-app routing, or <code>npm run system-audio:all</code> for the risky all-system route.</p>
       </section>
       <section className="panel route-diagram setup-wide">
         <h2><Headphones size={20} /> Final audio flow</h2>
