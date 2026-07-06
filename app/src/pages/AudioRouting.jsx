@@ -15,15 +15,15 @@ export function AudioRouting() {
   return (
     <>
       <PageHeader
-        eyebrow="Routing"
-        title="Send clips into a mic route and still hear them locally."
-        description="Set Mic Route to VB-CABLE Input or VoiceMeeter Input. Then set your game/meeting microphone to VB-CABLE Output or VoiceMeeter Output."
+        eyebrow="Virtual mic"
+        title="Use MemeBlip as the microphone source."
+        description="The built-in route will appear as a MemeBlip capture device after the local WDK package is prepared."
         action={<button className="primary-button" onClick={testRoute}><TestTube2 size={18} /> Stop/Test route</button>}
       />
       <section className="routing-grid">
         <div className="panel">
-          <h2><Cable size={20} /> Mic route output</h2>
-          <p className="muted-copy">Choose the virtual output that becomes a microphone input in other apps.</p>
+          <h2><Cable size={20} /> MemeBlip mic route</h2>
+          <p className="muted-copy">Select the MemeBlip endpoint here after it appears in Windows audio devices.</p>
           <div className="device-list">{devices.map((device) => <DeviceCard key={'route-' + device.id} device={device} selected={selectedDeviceId === device.id} onSelect={setSelectedDevice} />)}</div>
         </div>
         <div className="panel">
@@ -34,14 +34,14 @@ export function AudioRouting() {
         </div>
       </section>
       <section className="panel route-diagram setup-wide">
-        <h2><Headphones size={20} /> Setup wizard</h2>
-        <div className="route-step active"><CheckCircle2 size={16} /> 1. Install VB-CABLE or VoiceMeeter</div>
+        <h2><Headphones size={20} /> Built-in route checklist</h2>
+        <div className="route-step active"><CheckCircle2 size={16} /> 1. Prepare the WDK workspace from driver/scripts</div>
         <div className="route-line" />
-        <div className="route-step"><CheckCircle2 size={16} /> 2. Set MemeBlip Mic Route to Cable Input / VoiceMeeter Input</div>
+        <div className="route-step"><CheckCircle2 size={16} /> 2. Build the local audio package</div>
         <div className="route-line" />
-        <div className="route-step"><CheckCircle2 size={16} /> 3. In Discord, Meet, Zoom, or Valorant, set microphone to Cable Output / VoiceMeeter Output</div>
+        <div className="route-step"><CheckCircle2 size={16} /> 3. Add the package to Windows audio devices</div>
         <div className="route-line" />
-        <div className="route-step"><CheckCircle2 size={16} /> 4. Set Monitor Output to your headphones if you want local preview</div>
+        <div className="route-step"><CheckCircle2 size={16} /> 4. Select MemeBlip as the microphone in the target app</div>
       </section>
     </>
   );
