@@ -5,7 +5,9 @@ use std::{collections::HashMap, thread, time::{Duration, Instant}};
 
 pub fn spawn_hotkeys(storage: Storage, audio: AudioEngine) {
     thread::spawn(move || {
-        let _ = run_hotkeys(storage, audio);
+        if let Err(error) = run_hotkeys(storage, audio) {
+            eprintln!("hotkey worker stopped: {error}");
+        }
     });
 }
 
@@ -13,21 +15,38 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
     let manager = GlobalHotKeyManager::new()?;
     let receiver = GlobalHotKeyEvent::receiver();
     let mut bindings = HashMap::new();
+    let mut registered_ids = Vec::new();
     let mut last_seen = String::new();
     let mut last_scan = Instant::now() - Duration::from_secs(3);
+    println!("Hotkey worker active. For Valorant, run the companion as Administrator if keys do not fire in-game.");
 
     loop {
         if last_scan.elapsed() >= Duration::from_secs(2) {
             let signature = storage.sounds().iter().map(|sound| format!("{}:{}", sound.id, sound.key)).collect::<Vec<_>>().join("|");
             if signature != last_seen {
+                for id in registered_ids.drain(..) {
+                    let _ = manager.unregister(id);
+                }
+                bindings.clear();
+
+                let mut registered_count = 0;
                 for sound in storage.sounds() {
                     if let Some(hotkey) = parse_hotkey(&sound.key) {
                         let id = hotkey.id();
-                        if manager.register(hotkey).is_ok() {
-                            bindings.insert(id, sound.id.clone());
+                        match manager.register(hotkey) {
+                            Ok(_) => {
+                                println!("Registered hotkey: {} -> {}", sound.key, sound.name);
+                                bindings.insert(id, sound.id.clone());
+                                registered_ids.push(id);
+                                registered_count += 1;
+                            }
+                            Err(error) => {
+                                eprintln!("Could not register hotkey '{}' for '{}': {error}", sound.key, sound.name);
+                            }
                         }
                     }
                 }
+                println!("Hotkey map reloaded: {registered_count} active bindings");
                 last_seen = signature;
             }
             last_scan = Instant::now();
@@ -38,6 +57,7 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
                 if let Some(sound_id) = bindings.get(&event.id) {
                     if let Some(sound) = storage.find_sound(sound_id) {
                         let settings = storage.settings();
+                        println!("Hotkey fired: {}", sound.name);
                         let _ = audio.play(&sound, settings.output_device_id, settings.monitor_device_id);
                     }
                 }
