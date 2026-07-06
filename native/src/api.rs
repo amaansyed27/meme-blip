@@ -44,7 +44,15 @@ pub async fn serve(storage: Storage, audio: AudioEngine) -> Result<()> {
         .with_state(state);
 
     let addr: SocketAddr = "127.0.0.1:48322".parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
+    let listener = match tokio::net::TcpListener::bind(addr).await {
+        Ok(listener) => listener,
+        Err(error) if error.kind() == std::io::ErrorKind::AddrInUse => {
+            println!("MemeBlip companion is already running on http://{addr}");
+            println!("To reload the new build, run: npm run companion:stop");
+            return Ok(());
+        }
+        Err(error) => return Err(error.into()),
+    };
     println!("MemeBlip companion running on http://{addr}");
     axum::serve(listener, app).await?;
     Ok(())
