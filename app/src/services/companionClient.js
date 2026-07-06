@@ -41,8 +41,6 @@ export const companionClient = {
   checkUpdate: () => request('/updates/check'),
   downloadUpdate: () => request('/updates/download', { method: 'POST' }),
   testRoute: () => request('/devices/test', { method: 'POST' }),
-  openSystemAudioApps: () => request('/system-audio/apps', { method: 'POST' }),
-  openSystemAudioAll: () => request('/system-audio/all', { method: 'POST' }),
   importSound: ({ file, board, hotkey, volume }) => {
     const form = new FormData();
     form.append('file', file);
