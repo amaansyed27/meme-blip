@@ -28,16 +28,15 @@ function normalizeKey(event) {
   const blocked = ['Control', 'Shift', 'Alt', 'Meta'];
   if (blocked.includes(event.key)) return null;
 
+  let key = event.key;
+  if (key.length === 1) key = key.toUpperCase();
+  const supported = /^[A-Z0-9]$/.test(key) || /^F([1-9]|1[0-2])$/.test(key);
+  if (!supported) return null;
+
   const parts = [];
   if (event.ctrlKey) parts.push('Ctrl');
   if (event.altKey) parts.push('Alt');
   if (event.shiftKey) parts.push('Shift');
-
-  let key = event.key;
-  if (key === ' ') key = 'Space';
-  if (key.length === 1) key = key.toUpperCase();
-  if (key.startsWith('Arrow')) key = key.replace('Arrow', '');
-
   parts.push(key);
   return parts.join(' + ');
 }
@@ -57,6 +56,7 @@ export function Hotkeys() {
   }
 
   async function capture(event, sound) {
+    if (recordingId !== sound.id) return;
     event.preventDefault();
     event.stopPropagation();
     if (event.key === 'Escape') {
@@ -67,6 +67,11 @@ export function Hotkeys() {
     if (!combo) return;
     await assignHotkey(sound.id, combo);
     setRecordingId(null);
+  }
+
+  function startRecording(event, sound) {
+    setRecordingId(sound.id);
+    event.currentTarget.focus();
   }
 
   return (
@@ -92,9 +97,8 @@ export function Hotkeys() {
             <div><span className={'mini-dot ' + sound.color} /><strong>{sound.name}</strong><small>{sound.board}</small></div>
             <button
               className={recordingId === sound.id ? 'record-hotkey recording' : 'record-hotkey'}
-              onClick={() => setRecordingId(sound.id)}
+              onClick={(event) => startRecording(event, sound)}
               onKeyDown={(event) => capture(event, sound)}
-              autoFocus={recordingId === sound.id}
             >
               {recordingId === sound.id ? 'Press keys…' : sound.key || 'Record'}
             </button>
