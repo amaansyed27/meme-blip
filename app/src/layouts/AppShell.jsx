@@ -1,5 +1,6 @@
+import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, CircleDot, Command, Moon, RefreshCw, Search, Volume2, VolumeX } from 'lucide-react';
+import { Bell, CircleDot, Command, Moon, RefreshCw, Search, Sun, Volume2, VolumeX } from 'lucide-react';
 import { routes } from '../data/seedData.js';
 import { iconMap } from '../lib/iconMap.js';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
@@ -15,6 +16,16 @@ export function AppShell({ children }) {
   const initialize = useMemeBlipStore((state) => state.initialize);
   const companionOnline = useMemeBlipStore((state) => state.companionOnline);
   const error = useMemeBlipStore((state) => state.error);
+  const [theme, setTheme] = React.useState(() => localStorage.getItem('memeblip-theme') || 'dark');
+
+  React.useEffect(() => {
+    document.body.classList.toggle('theme-light', theme === 'light');
+    localStorage.setItem('memeblip-theme', theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark');
+  }
 
   return (
     <div className="app-shell">
@@ -50,15 +61,15 @@ export function AppShell({ children }) {
             <kbd><Command size={12} /> K</kbd>
           </label>
           <div className="top-actions">
-            <button className="icon-button" onClick={initialize}><RefreshCw size={18} /></button>
-            <button className="icon-button"><Moon size={18} /></button>
-            <button className="icon-button"><Bell size={18} /></button>
+            <button className="icon-button" onClick={initialize} aria-label="Refresh"><RefreshCw size={18} /></button>
+            <button className="icon-button" onClick={toggleTheme} aria-label="Toggle theme">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
+            <button className="icon-button" aria-label="Notifications"><Bell size={18} /></button>
             <button className="danger-soft" onClick={stopAll}>Stop all</button>
-            <button className="icon-button" onClick={toggleMute}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
+            <button className="icon-button" onClick={toggleMute} aria-label="Mute toggle">{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
           </div>
         </header>
         <AnimatePresence mode="wait">
-          <motion.section key={route} className="page" initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -8, filter: 'blur(6px)' }} transition={{ duration: 0.22 }}>
+          <motion.section key={route} className="page" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
             {children}
           </motion.section>
         </AnimatePresence>
