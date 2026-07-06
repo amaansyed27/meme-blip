@@ -1,4 +1,4 @@
-use crate::{audio::AudioEngine, driver, models::{AssignHotkeyRequest, HealthResponse, SetMonitorDeviceRequest, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
+use crate::{audio::AudioEngine, driver, models::{AssignHotkeyRequest, HealthResponse, MixerStatus, SetInputDeviceRequest, SetMicPassthroughRequest, SetMonitorDeviceRequest, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
 use anyhow::{anyhow, Result};
 use axum::{extract::{Multipart, Path, State}, http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::{get, patch, post}, Json, Router};
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -25,11 +25,15 @@ pub async fn serve(storage: Storage, audio: AudioEngine) -> Result<()> {
         .route("/sounds/stop-all", post(stop_all))
         .route("/boards", get(list_boards))
         .route("/devices", get(list_devices))
+        .route("/devices/inputs", get(list_input_devices))
         .route("/devices/test", post(test_device))
         .route("/driver/status", get(driver_status))
+        .route("/mixer/status", get(mixer_status))
         .route("/settings", get(get_settings))
         .route("/settings/output-device", post(set_output_device))
         .route("/settings/monitor-device", post(set_monitor_device))
+        .route("/settings/input-device", post(set_input_device))
+        .route("/settings/mic-passthrough", post(set_mic_passthrough))
         .route("/updates/check", get(check_update))
         .route("/updates/download", post(download_update))
         .fallback_service(ServeDir::new(static_dir()))
@@ -51,11 +55,15 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<HealthResponse> {
 async fn driver_status(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<driver::DriverStatus>, ApiError> { verify(&headers, &state)?; Ok(Json(driver::status())) }
 async fn list_sounds(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<SoundClip>>, ApiError> { verify(&headers, &state)?; Ok(Json(state.storage.sounds())) }
 async fn list_boards(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<String>>, ApiError> { verify(&headers, &state)?; let mut boards = Vec::new(); for sound in state.storage.sounds() { if !boards.contains(&sound.board) { boards.push(sound.board); } } Ok(Json(boards)) }
-async fn list_devices(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<crate::models::AudioDevice>>, ApiError> { verify(&headers, &state)?; let settings = state.storage.settings(); Ok(Json(state.audio.devices(settings.output_device_id, settings.monitor_device_id)?)) }
+async fn list_devices(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<crate::models::AudioDevice>>, ApiError> { verify(&headers, &state)?; let settings = state.storage.settings(); Ok(Json(state.audio.output_devices(settings.output_device_id, settings.monitor_device_id)?)) }
+async fn list_input_devices(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<Vec<crate::models::AudioDevice>>, ApiError> { verify(&headers, &state)?; let settings = state.storage.settings(); Ok(Json(state.audio.input_devices(settings.input_device_id)?)) }
 async fn test_device(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<serde_json::Value>, ApiError> { verify(&headers, &state)?; state.audio.stop_all(); Ok(Json(serde_json::json!({ "ok": true }))) }
+async fn mixer_status(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<MixerStatus>, ApiError> { verify(&headers, &state)?; let settings = state.storage.settings(); Ok(Json(MixerStatus { input_device_id: settings.input_device_id, output_device_id: settings.output_device_id, monitor_device_id: settings.monitor_device_id, mic_passthrough_enabled: settings.mic_passthrough_enabled, intended_target_input: String::from("MemeBlip Virtual Mic"), intended_speaker_output: String::from("Existing system speakers/headphones") })) }
 async fn get_settings(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; Ok(Json(state.storage.settings())) }
 async fn set_output_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetOutputDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.output_device_id = Some(payload.device_id); Ok(Json(state.storage.set_settings(settings)?)) }
 async fn set_monitor_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMonitorDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.monitor_device_id = payload.device_id; Ok(Json(state.storage.set_settings(settings)?)) }
+async fn set_input_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetInputDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.input_device_id = payload.device_id; Ok(Json(state.storage.set_settings(settings)?)) }
+async fn set_mic_passthrough(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMicPassthroughRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.mic_passthrough_enabled = payload.enabled; Ok(Json(state.storage.set_settings(settings)?)) }
 
 async fn import_sound(State(state): State<Arc<AppState>>, headers: HeaderMap, mut multipart: Multipart) -> Result<Json<SoundClip>, ApiError> {
     verify(&headers, &state)?;
