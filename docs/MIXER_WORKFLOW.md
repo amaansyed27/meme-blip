@@ -1,6 +1,6 @@
 # MemeBlip Mixer Workflow
 
-MemeBlip now uses a no-WDK MVP path with VB-CABLE. The native MemeBlip driver remains parked for later.
+MemeBlip uses a no-WDK MVP path with VB-CABLE. The native MemeBlip driver remains parked for later.
 
 Target behavior:
 
@@ -20,14 +20,11 @@ Physical mic input
 MemeBlip soundboard clips
   -> CABLE Input
 
-Optional app/system audio
-  -> CABLE Input
-
 CABLE Output
   -> Discord / Meet / Zoom / Valorant microphone
 ```
 
-Optional local preview:
+Local preview:
 
 ```text
 MemeBlip soundboard clips
@@ -40,43 +37,12 @@ MemeBlip soundboard clips
 - Do not ask the user to change system speaker output for normal mic/soundboard mode.
 - Do not ask the user to disable their physical mic.
 - In the target app, the user should select `CABLE Output` as the microphone.
-- In MemeBlip, the virtual route should be `CABLE Input`.
+- In MemeBlip, the virtual route should be normal `CABLE Input`.
 - In MemeBlip, `Real mic source` should be the user's normal physical microphone.
 - `CABLE Output` should not be selected as the real mic source.
-- Monitor output is optional and only exists so the user can hear meme clips locally.
-- For system audio mode, prefer per-app Windows Volume Mixer routing over all-system routing.
-- Do not route the call app's speaker audio into `CABLE Input`, or other participants may hear echo/feedback.
-
-## System audio mode
-
-Recommended app-specific route:
-
-```text
-Browser / game / music app output = CABLE Input
-Meet / Discord / Valorant speaker = normal headphones/speakers
-Meet / Discord / Valorant microphone = CABLE Output
-```
-
-Helper:
-
-```powershell
-npm run system-audio:apps
-```
-
-All-system route:
-
-```text
-Windows system output = CABLE Input
-Target app microphone = CABLE Output
-```
-
-Helper:
-
-```powershell
-npm run system-audio:all
-```
-
-Warning: all-system mode can feed call audio back into the mic if the call's speaker output also uses the system default. Prefer app-specific routing for browser/game/music sharing.
+- Avoid the 16ch cable route in the MVP.
+- Monitor output should usually be the user's headphones/speakers so they can hear uploaded clips locally.
+- System audio routing is removed from the product path because it is unreliable with plain VB-CABLE and does not monitor cleanly.
 
 ## Current implementation state
 
@@ -90,9 +56,8 @@ Implemented now:
 - Optional monitor playback to the selected speaker/headphone output.
 - `/devices/inputs` API endpoint.
 - `/mixer/status` API endpoint.
-- Dashboard routing UI for `Real mic source`, `Virtual route`, `Monitor output`, and `System audio mode`.
+- Dashboard routing UI for `Real mic source`, `Virtual route`, and `Monitor output`.
 - VB-CABLE install/check helper scripts.
-- Windows helper scripts for per-app and all-system audio routing pages.
 
 ## VB-CABLE install commands
 
