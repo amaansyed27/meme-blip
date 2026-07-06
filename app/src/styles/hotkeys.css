@@ -1,0 +1,51 @@
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preset-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--soft);
+  background: rgba(255,255,255,0.04);
+  font-size: 12px;
+}
+
+.preset-card:hover {
+  color: white;
+  border-color: rgba(125,255,196,.24);
+  background: rgba(125,255,196,.075);
+}
+
+.record-hotkey {
+  min-width: 132px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--soft);
+  background: rgba(255,255,255,0.045);
+  text-align: center;
+  font-size: 12px;
+}
+
+.record-hotkey:hover,
+.record-hotkey:focus {
+  color: white;
+  border-color: rgba(125,255,196,.28);
+  outline: none;
+}
+
+.record-hotkey.recording {
+  color: #07100d;
+  border-color: rgba(125,255,196,.55);
+  background: linear-gradient(135deg, var(--mint), #dfffee);
+  font-weight: 800;
+}
