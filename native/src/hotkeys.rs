@@ -15,7 +15,7 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
     let manager = GlobalHotKeyManager::new()?;
     let receiver = GlobalHotKeyEvent::receiver();
     let mut bindings = HashMap::new();
-    let mut registered_ids = Vec::new();
+    let mut registered_hotkeys: Vec<HotKey> = Vec::new();
     let mut last_seen = String::new();
     let mut last_scan = Instant::now() - Duration::from_secs(3);
     println!("Hotkey worker active. For Valorant, run the companion as Administrator if keys do not fire in-game.");
@@ -24,8 +24,8 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
         if last_scan.elapsed() >= Duration::from_secs(2) {
             let signature = storage.sounds().iter().map(|sound| format!("{}:{}", sound.id, sound.key)).collect::<Vec<_>>().join("|");
             if signature != last_seen {
-                for id in registered_ids.drain(..) {
-                    let _ = manager.unregister(id);
+                for hotkey in registered_hotkeys.drain(..) {
+                    let _ = manager.unregister(hotkey);
                 }
                 bindings.clear();
 
@@ -37,7 +37,9 @@ fn run_hotkeys(storage: Storage, audio: AudioEngine) -> Result<(), Box<dyn std::
                             Ok(_) => {
                                 println!("Registered hotkey: {} -> {}", sound.key, sound.name);
                                 bindings.insert(id, sound.id.clone());
-                                registered_ids.push(id);
+                                if let Some(saved_hotkey) = parse_hotkey(&sound.key) {
+                                    registered_hotkeys.push(saved_hotkey);
+                                }
                                 registered_count += 1;
                             }
                             Err(error) => {
