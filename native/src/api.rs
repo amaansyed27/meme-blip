@@ -1,4 +1,4 @@
-use crate::{audio::AudioEngine, driver, models::{AssignHotkeyRequest, HealthResponse, MixerStatus, SetInputDeviceRequest, SetMicPassthroughRequest, SetMonitorDeviceRequest, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
+use crate::{audio::AudioEngine, driver, models::{AssignHotkeyRequest, HealthResponse, MixerStatus, SetActiveBoardRequest, SetInputDeviceRequest, SetMicPassthroughRequest, SetMonitorDeviceRequest, SetOutputDeviceRequest, SoundClip, UpdateSoundRequest}, storage::Storage, updater};
 use anyhow::{anyhow, Result};
 use axum::{extract::{Multipart, Path, State}, http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::{get, patch, post}, Json, Router};
 use std::{fs, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -34,6 +34,7 @@ pub async fn serve(storage: Storage, audio: AudioEngine) -> Result<()> {
         .route("/settings/output-device", post(set_output_device))
         .route("/settings/monitor-device", post(set_monitor_device))
         .route("/settings/input-device", post(set_input_device))
+        .route("/settings/active-board", post(set_active_board))
         .route("/settings/mic-passthrough", post(set_mic_passthrough))
         .route("/updates/check", get(check_update))
         .route("/updates/download", post(download_update))
@@ -72,6 +73,7 @@ async fn get_settings(State(state): State<Arc<AppState>>, headers: HeaderMap) ->
 async fn set_output_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetOutputDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.output_device_id = Some(payload.device_id); let saved = state.storage.set_settings(settings)?; apply_mic_passthrough(&state)?; Ok(Json(saved)) }
 async fn set_monitor_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMonitorDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.monitor_device_id = payload.device_id; Ok(Json(state.storage.set_settings(settings)?)) }
 async fn set_input_device(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetInputDeviceRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.input_device_id = payload.device_id; let saved = state.storage.set_settings(settings)?; apply_mic_passthrough(&state)?; Ok(Json(saved)) }
+async fn set_active_board(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetActiveBoardRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.active_board = payload.board.filter(|board| !board.trim().is_empty()); Ok(Json(state.storage.set_settings(settings)?)) }
 async fn set_mic_passthrough(State(state): State<Arc<AppState>>, headers: HeaderMap, Json(payload): Json<SetMicPassthroughRequest>) -> Result<Json<crate::models::AppSettings>, ApiError> { verify(&headers, &state)?; let mut settings = state.storage.settings(); settings.mic_passthrough_enabled = payload.enabled; let saved = state.storage.set_settings(settings)?; apply_mic_passthrough(&state)?; Ok(Json(saved)) }
 
 async fn import_sound(State(state): State<Arc<AppState>>, headers: HeaderMap, mut multipart: Multipart) -> Result<Json<SoundClip>, ApiError> {
