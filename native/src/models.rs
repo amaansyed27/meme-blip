@@ -29,6 +29,7 @@ pub struct AppSettings {
     pub output_device_id: Option<String>,
     pub monitor_device_id: Option<String>,
     pub input_device_id: Option<String>,
+    pub active_board: Option<String>,
     pub mic_passthrough_enabled: bool,
     pub start_on_boot: bool,
     pub api_token: String,
@@ -40,6 +41,7 @@ impl Default for AppSettings {
             output_device_id: None,
             monitor_device_id: None,
             input_device_id: None,
+            active_board: None,
             mic_passthrough_enabled: true,
             start_on_boot: true,
             api_token: uuid::Uuid::new_v4().to_string(),
@@ -63,6 +65,12 @@ pub struct SetMonitorDeviceRequest {
 #[serde(rename_all = "camelCase")]
 pub struct SetInputDeviceRequest {
     pub device_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetActiveBoardRequest {
+    pub board: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
