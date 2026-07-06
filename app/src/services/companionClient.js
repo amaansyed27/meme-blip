@@ -52,5 +52,6 @@ export const companionClient = {
   play: (soundId) => request(`/sounds/${soundId}/play`, { method: 'POST' }),
   stopAll: () => request('/sounds/stop-all', { method: 'POST' }),
   setOutputDevice: (deviceId) => request('/settings/output-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
+  setMonitorDevice: (deviceId) => request('/settings/monitor-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
   assignHotkey: (soundId, hotkey) => request(`/sounds/${soundId}/hotkey`, { method: 'POST', body: JSON.stringify({ hotkey }) })
 };
