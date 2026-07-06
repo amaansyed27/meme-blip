@@ -1,28 +1,28 @@
-import { Plus } from 'lucide-react';
 import { BoardCard } from '../components/BoardCard.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 
 export function Soundboards() {
   const boards = useMemeBlipStore((state) => state.boards);
+  const activeBoard = useMemeBlipStore((state) => state.activeBoard);
+  const setActiveBoard = useMemeBlipStore((state) => state.setActiveBoard);
 
   return (
     <>
       <PageHeader
         eyebrow="Boards"
-        title="Separate gaming chaos from meeting reactions."
-        description="Boards are focused sets of clips. Enable one board at a time for cleaner hotkey behavior."
-        action={<button className="primary-button"><Plus size={18} /> New board</button>}
+        title="Choose which board owns your hotkeys."
+        description="Only the active board responds to global hotkeys. Clips can still be played manually from the library."
+        action={activeBoard ? <button className="subtle-button" onClick={() => setActiveBoard(null)}>Use all boards</button> : null}
       />
-      <section className="board-grid">{boards.map((board) => <BoardCard key={board.id} board={board} />)}</section>
-      <section className="panel workflow-panel">
-        <h2>Board rules</h2>
-        <div className="rule-list">
-          <article><strong>Gaming mode</strong><p>Short clips, hard stop key, conservative volume.</p></article>
-          <article><strong>Meeting mode</strong><p>Muted by default, monitor preview before routing.</p></article>
-          <article><strong>Fun mode</strong><p>Loose keybinds and louder local speaker playback.</p></article>
-        </div>
-      </section>
+
+      {boards.length ? (
+        <section className="board-grid">
+          {boards.map((board) => <BoardCard key={board.id} board={board} active={activeBoard === board.name} onActivate={setActiveBoard} />)}
+        </section>
+      ) : (
+        <section className="empty-state">Import clips to create your first soundboard.</section>
+      )}
     </>
   );
 }
