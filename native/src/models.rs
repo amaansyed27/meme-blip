@@ -46,6 +46,12 @@ pub struct SetOutputDeviceRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SetMonitorDeviceRequest {
+    pub device_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AssignHotkeyRequest {
     pub hotkey: String,
 }
