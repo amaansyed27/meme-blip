@@ -2,7 +2,7 @@
 
 ## Current product direction
 
-MemeBlip should stay focused on the reliable MVP:
+MemeBlip stays focused on the reliable MVP:
 
 ```text
 Uploaded clips + physical mic passthrough -> CABLE Input -> CABLE Output -> game/call microphone
@@ -11,7 +11,7 @@ Monitor output -> user headphones/speakers
 
 System-audio routing was removed from the product path because it is unreliable with plain VB-CABLE and does not monitor cleanly.
 
-## Fixed in this cleanup pass
+## Completed cleanup
 
 - Removed fake folder controls from the Sounds page.
 - Removed display-only board rules from the Soundboards page.
@@ -25,6 +25,10 @@ System-audio routing was removed from the product path because it is unreliable 
 - Removed stale system-audio helper scripts and npm scripts.
 - Made CI steps explicit for frontend and native builds.
 - Hardened frontend TypeScript module resolution for CI.
+- Split `native/src/api.rs` into auth, error, and route modules.
+- Split `useMemeBlipStore.js` into focused Zustand slices.
+- Split broad product CSS into theme, layout, sounds, routing, hotkeys, and shared utility styles.
+- Switched the visual language to a lower-radius grey-black paper dark theme with a paper light theme.
 
 ## Product behavior now
 
@@ -48,51 +52,48 @@ System-audio routing was removed from the product path because it is unreliable 
 - Companion logs registered hotkeys and fired hotkeys.
 - Valorant preset is PTT-friendly: hold `V`, then press `F1`-`F8`.
 
-## Remaining architecture debt
+## Current module layout
 
-### Native API file is still too large
-
-`native/src/api.rs` still contains routing, auth, settings mutation, upload handling, sound CRUD, and update endpoints in one file. Split next into:
+### Native API
 
 ```text
-native/src/api/mod.rs
+native/src/api.rs
 native/src/api/auth.rs
-native/src/api/routes/sounds.rs
-native/src/api/routes/settings.rs
+native/src/api/error.rs
+native/src/api/routes/mod.rs
 native/src/api/routes/devices.rs
-native/src/api/routes/updates.rs
+native/src/api/routes/settings.rs
+native/src/api/routes/sounds.rs
+native/src/api/routes/system.rs
 ```
 
-### Frontend store is still too broad
+Update check/download handlers remain in `api.rs` because the connector blocked creating a dedicated updates route module during this pass. Functionally they are still isolated at the bottom of the API root.
 
-`app/src/state/useMemeBlipStore.js` owns app navigation, devices, sounds, boards, hotkeys, updates, and errors. Split next into smaller slices:
+### Frontend state
 
 ```text
+app/src/state/useMemeBlipStore.js
+app/src/state/boardUtils.js
+app/src/state/slices/appSlice.js
 app/src/state/slices/audioSlice.js
 app/src/state/slices/soundSlice.js
-app/src/state/slices/boardSlice.js
 app/src/state/slices/uiSlice.js
 ```
 
-### Product CSS is still too broad
-
-`app/src/styles/product.css` still carries global product overrides, sound cards, routing, light theme, and layout tweaks. Split next into:
+### Styles
 
 ```text
+app/src/styles/theme.css
 app/src/styles/layout.css
 app/src/styles/sounds.css
 app/src/styles/routing.css
-app/src/styles/theme-light.css
+app/src/styles/hotkeys.css
+app/src/styles/product.css
 ```
 
-### Driver folder is parked, not product-ready
+## Remaining architecture debt
 
-The WDK driver path is intentionally parked. Keep it out of the main product UI until there is a working native driver build/install/test loop.
-
-## Next cleanup priority
-
-1. Split `native/src/api.rs` into API route modules.
-2. Split `useMemeBlipStore.js` into focused slices.
-3. Move sound-card CSS out of `product.css`.
-4. Add a CI check for `cargo check --manifest-path native/Cargo.toml` before the full native build.
-5. Add a small regression checklist for audio routing, clip import, active board hotkeys, and Valorant PTT flow.
+- Move update check/download handlers into `native/src/api/routes/updates.rs` when connector edits allow it.
+- Replace the parked WDK driver path only after there is a working native driver build/install/test loop.
+- Add regression tests or scripted checks for audio routing, clip import, active board hotkeys, and Valorant PTT flow.
+- Add a dedicated release workflow after final local testing.
