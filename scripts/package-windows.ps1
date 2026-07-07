@@ -11,6 +11,13 @@ $IconPath = Join-Path $ReleaseDir "memeblip-windows.ico"
 $MsiPath = Join-Path $ReleaseDir "MemeBlip-Setup.msi"
 $Version = "0.1.0"
 
+function Invoke-Checked($FilePath, [string[]]$Arguments) {
+  & $FilePath @Arguments
+  if ($LASTEXITCODE -ne 0) {
+    throw "Command failed with exit code $LASTEXITCODE: $FilePath $($Arguments -join ' ')"
+  }
+}
+
 function Get-ToolPath($name) {
   $command = Get-Command $name -ErrorAction SilentlyContinue
   if ($command) { return $command.Source }
@@ -107,8 +114,11 @@ function New-IcoFromPng($SourcePng, $DestinationIco) {
 Set-Location $Root
 
 npm install
+if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
 npm run build
+if ($LASTEXITCODE -ne 0) { throw "npm run build failed" }
 cargo build --release --manifest-path native/Cargo.toml
+if ($LASTEXITCODE -ne 0) { throw "cargo release build failed" }
 
 if (Test-Path $BundleDir) { Remove-Item $BundleDir -Recurse -Force }
 if (Test-Path $InstallerDir) { Remove-Item $InstallerDir -Recurse -Force }
@@ -125,17 +135,17 @@ cd /d %~dp0
 start "MemeBlip" MemeBlip.exe
 "@ | Set-Content -Path (Join-Path $BundleDir "Launch MemeBlip.bat") -Encoding ASCII
 
-$ZipPath = Join-Path $ReleaseDir "MemeBlip-Windows.zip"
-if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
-Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $ZipPath -Force
-Write-Host "Packaged portable bundle to $ZipPath"
-
 if (Test-Path $BrandPng) {
   New-IcoFromPng -SourcePng $BrandPng -DestinationIco $IconPath
   Copy-Item $IconPath (Join-Path $BundleDir "MemeBlip.ico") -Force
 } else {
   Write-Warning "Brand PNG not found at $BrandPng. MSI will be built without a product icon."
 }
+
+$ZipPath = Join-Path $ReleaseDir "MemeBlip-Windows.zip"
+if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
+Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $ZipPath -Force
+Write-Host "Packaged portable bundle to $ZipPath"
 
 $heat = Get-ToolPath "heat.exe"
 $candle = Get-ToolPath "candle.exe"
@@ -156,7 +166,7 @@ $ProductWxs = Join-Path $InstallerDir "Product.wxs"
 $ProductWixObj = Join-Path $InstallerDir "Product.wixobj"
 $HarvestWixObj = Join-Path $InstallerDir "MemeBlipFiles.wixobj"
 
-& $heat dir $BundleDir -cg MemeBlipFiles -dr INSTALLFOLDER -srd -sreg -gg -var var.BundleDir -out $HarvestWxs
+Invoke-Checked $heat @("dir", "$BundleDir", "-cg", "MemeBlipFiles", "-dr", "INSTALLFOLDER", "-srd", "-sreg", "-gg", "-out", "$HarvestWxs")
 
 $iconXml = ""
 $shortcutIconAttribute = ""
@@ -199,8 +209,12 @@ if (Test-Path $IconPath) {
 </Wix>
 "@ | Set-Content -Path $ProductWxs -Encoding UTF8
 
-& $candle -dBundleDir=$BundleDir -out $HarvestWixObj $HarvestWxs
-& $candle -dBundleDir=$BundleDir -out $ProductWixObj $ProductWxs
-& $light -out $MsiPath $ProductWixObj $HarvestWixObj
+Invoke-Checked $candle @("-out", "$HarvestWixObj", "$HarvestWxs")
+Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
+Invoke-Checked $light @("-out", "$MsiPath", "$ProductWixObj", "$HarvestWixObj")
+
+if (!(Test-Path $MsiPath)) {
+  throw "MSI build finished but $MsiPath was not created."
+}
 
 Write-Host "Packaged MSI installer to $MsiPath"
