@@ -132,6 +132,7 @@ This creates a portable bundle under `release/MemeBlip-Windows` and `release/Mem
 - [How MemeBlip works](docs/WORKING.md)
 - [Project index](docs/INDEX.md)
 - [Release guide](docs/RELEASE.md)
+- [Changelog](docs/CHANGELOG.md)
 - [Code review notes](docs/CODE_REVIEW.md)
 - [TODO](docs/TODO.md)
 - [Logo and icon placement](LOGO_SETUP.md)
