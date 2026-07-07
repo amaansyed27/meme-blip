@@ -18,6 +18,10 @@ function Invoke-Checked($FilePath, [string[]]$Arguments) {
   }
 }
 
+function Escape-Xml($value) {
+  return [System.Security.SecurityElement]::Escape([string]$value)
+}
+
 function Get-ToolPath($name) {
   $command = Get-Command $name -ErrorAction SilentlyContinue
   if ($command) { return $command.Source }
@@ -111,6 +115,98 @@ function New-IcoFromPng($SourcePng, $DestinationIco) {
   }
 }
 
+function New-FileComponentXml($file, $indent) {
+  $script:ComponentCounter++
+  $componentId = "CMP{0:D5}" -f $script:ComponentCounter
+  $fileId = "FIL{0:D5}" -f $script:ComponentCounter
+  [void]$script:ComponentRefs.Add("      <ComponentRef Id=\"$componentId\" />")
+  $source = Escape-Xml $file.FullName
+  return @"
+$indent<Component Id="$componentId" Guid="*">
+$indent  <File Id="$fileId" Source="$source" KeyPath="yes" />
+$indent</Component>
+"@
+}
+
+function New-DirectoryContentXml($directoryPath, $indent) {
+  $chunks = New-Object System.Collections.Generic.List[string]
+
+  Get-ChildItem -Path $directoryPath -File | Sort-Object Name | ForEach-Object {
+    [void]$chunks.Add((New-FileComponentXml $_ $indent).TrimEnd())
+  }
+
+  Get-ChildItem -Path $directoryPath -Directory | Sort-Object Name | ForEach-Object {
+    $script:DirectoryCounter++
+    $directoryId = "DIR{0:D5}" -f $script:DirectoryCounter
+    $name = Escape-Xml $_.Name
+    $child = New-DirectoryContentXml $_.FullName ($indent + "  ")
+    [void]$chunks.Add(@"
+$indent<Directory Id="$directoryId" Name="$name">
+$child
+$indent</Directory>
+"@.TrimEnd())
+  }
+
+  return ($chunks -join "`n")
+}
+
+function New-ProductWxs($OutputPath) {
+  $script:ComponentCounter = 0
+  $script:DirectoryCounter = 0
+  $script:ComponentRefs = New-Object System.Collections.Generic.List[string]
+
+  $installTree = New-DirectoryContentXml $BundleDir "          "
+  $componentRefsText = $script:ComponentRefs -join "`n"
+
+  $iconXml = ""
+  $shortcutIconAttribute = ""
+  if (Test-Path $IconPath) {
+    $escapedIconPath = Escape-Xml $IconPath
+    $iconXml = '<Icon Id="MemeBlipIcon.ico" SourceFile="' + $escapedIconPath + '" />' + "`n" + '    <Property Id="ARPPRODUCTICON" Value="MemeBlipIcon.ico" />'
+    $shortcutIconAttribute = ' Icon="MemeBlipIcon.ico"'
+  }
+
+@"
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="MemeBlip" Language="1033" Version="$Version" Manufacturer="Amaan Syed" UpgradeCode="B4E22F46-54D8-4629-8B17-94E5D802DC9D">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of MemeBlip is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    $iconXml
+
+    <Feature Id="DefaultFeature" Title="MemeBlip" Level="1">
+      <ComponentGroupRef Id="MemeBlipFiles" />
+      <ComponentRef Id="ApplicationShortcut" />
+    </Feature>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="MemeBlip">
+$installTree
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="MemeBlip" />
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="*">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="MemeBlip" Description="MemeBlip tray soundboard" Target="[INSTALLFOLDER]MemeBlip.exe" WorkingDirectory="INSTALLFOLDER"$shortcutIconAttribute />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\MemeBlip" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <ComponentGroup Id="MemeBlipFiles">
+$componentRefsText
+    </ComponentGroup>
+  </Product>
+</Wix>
+"@ | Set-Content -Path $OutputPath -Encoding UTF8
+}
+
 Set-Location $Root
 
 npm install
@@ -147,71 +243,25 @@ if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
 Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $ZipPath -Force
 Write-Host "Packaged portable bundle to $ZipPath"
 
-$heat = Get-ToolPath "heat.exe"
 $candle = Get-ToolPath "candle.exe"
 $light = Get-ToolPath "light.exe"
 
-if (!$heat -or !$candle -or !$light) {
+if (!$candle -or !$light) {
   Write-Warning "WiX Toolset was not found. Portable zip is ready, but MSI was skipped. Install WiX Toolset v3.11 or newer to build MemeBlip-Setup.msi."
   exit 0
 }
 
 Write-Host "Using WiX tools:"
-Write-Host "  heat:   $heat"
 Write-Host "  candle: $candle"
 Write-Host "  light:  $light"
 
-$HarvestWxs = Join-Path $InstallerDir "MemeBlipFiles.wxs"
 $ProductWxs = Join-Path $InstallerDir "Product.wxs"
 $ProductWixObj = Join-Path $InstallerDir "Product.wixobj"
-$HarvestWixObj = Join-Path $InstallerDir "MemeBlipFiles.wixobj"
 
-Invoke-Checked $heat @("dir", "$BundleDir", "-cg", "MemeBlipFiles", "-dr", "INSTALLFOLDER", "-srd", "-sreg", "-gg", "-out", "$HarvestWxs")
+New-ProductWxs $ProductWxs
 
-$iconXml = ""
-$shortcutIconAttribute = ""
-if (Test-Path $IconPath) {
-  $iconXml = '<Icon Id="MemeBlipIcon.ico" SourceFile="' + $IconPath + '" />' + "`n" + '    <Property Id="ARPPRODUCTICON" Value="MemeBlipIcon.ico" />'
-  $shortcutIconAttribute = ' Icon="MemeBlipIcon.ico"'
-}
-
-@"
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="MemeBlip" Language="1033" Version="$Version" Manufacturer="Amaan Syed" UpgradeCode="B4E22F46-54D8-4629-8B17-94E5D802DC9D">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of MemeBlip is already installed." />
-    <MediaTemplate EmbedCab="yes" />
-    $iconXml
-
-    <Feature Id="DefaultFeature" Title="MemeBlip" Level="1">
-      <ComponentGroupRef Id="MemeBlipFiles" />
-      <ComponentRef Id="ApplicationShortcut" />
-    </Feature>
-
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="MemeBlip" />
-      </Directory>
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="MemeBlip" />
-      </Directory>
-    </Directory>
-
-    <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcut" Guid="*">
-        <Shortcut Id="ApplicationStartMenuShortcut" Name="MemeBlip" Description="MemeBlip tray soundboard" Target="[INSTALLFOLDER]MemeBlip.exe" WorkingDirectory="INSTALLFOLDER"$shortcutIconAttribute />
-        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\MemeBlip" Name="installed" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
-    </DirectoryRef>
-  </Product>
-</Wix>
-"@ | Set-Content -Path $ProductWxs -Encoding UTF8
-
-Invoke-Checked $candle @("-out", "$HarvestWixObj", "$HarvestWxs")
 Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
-Invoke-Checked $light @("-out", "$MsiPath", "$ProductWixObj", "$HarvestWixObj")
+Invoke-Checked $light @("-out", "$MsiPath", "$ProductWixObj")
 
 if (!(Test-Path $MsiPath)) {
   throw "MSI build finished but $MsiPath was not created."
