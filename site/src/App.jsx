@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Download, Github, Mic2, MonitorSpeaker, Play, Radio, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, Download, ExternalLink, Mic2, MonitorSpeaker, Play, Radio, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 
 const downloadUrl = import.meta.env.VITE_MEMEBLIP_DOWNLOAD_URL || 'https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi';
 
@@ -41,7 +41,7 @@ export function App() {
         <div className="nav-links">
           <a href="#routing">Routing</a>
           <a href="#setup">Setup</a>
-          <a href="https://github.com/amaansyed27/meme-blip" target="_blank" rel="noreferrer"><Github size={15} /> GitHub</a>
+          <a href="https://github.com/amaansyed27/meme-blip" target="_blank" rel="noreferrer"><ExternalLink size={15} /> GitHub</a>
           <a className="download-link" href={downloadUrl}>Download</a>
         </div>
       </nav>
