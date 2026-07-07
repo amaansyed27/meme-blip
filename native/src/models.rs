@@ -30,6 +30,10 @@ pub struct AppSettings {
     pub monitor_device_id: Option<String>,
     pub input_device_id: Option<String>,
     pub active_board: Option<String>,
+    #[serde(default)]
+    pub custom_boards: Vec<String>,
+    #[serde(default)]
+    pub favorite_boards: Vec<String>,
     pub mic_passthrough_enabled: bool,
     pub start_on_boot: bool,
     pub api_token: String,
@@ -42,6 +46,8 @@ impl Default for AppSettings {
             monitor_device_id: None,
             input_device_id: None,
             active_board: None,
+            custom_boards: Vec::new(),
+            favorite_boards: Vec::new(),
             mic_passthrough_enabled: true,
             start_on_boot: true,
             api_token: uuid::Uuid::new_v4().to_string(),
@@ -71,6 +77,19 @@ pub struct SetInputDeviceRequest {
 #[serde(rename_all = "camelCase")]
 pub struct SetActiveBoardRequest {
     pub board: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateBoardRequest {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetFavoriteBoardRequest {
+    pub board: String,
+    pub favorite: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
