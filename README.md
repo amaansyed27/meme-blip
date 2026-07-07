@@ -2,10 +2,11 @@
 
 MemeBlip is a local-first tray soundboard for games, calls, and meetings. It lets you import short clips, organize them into soundboards, trigger them with hotkeys, and route clip audio plus optional mic passthrough into apps through VB-CABLE.
 
-The project has two parts:
+The project has three parts:
 
 - **Web dashboard**: React/Vite UI for sounds, boards, hotkeys, routing, and settings.
 - **Native companion**: Rust app that owns playback, local API, tray integration, hotkeys, audio devices, and persistent storage.
+- **Landing page**: Minimal public site under `site/`, deployable on Vercel.
 
 ## Current scope
 
@@ -33,6 +34,7 @@ System-wide audio routing is intentionally not part of the product path right no
 - Local companion API protected by a local token header.
 - GitHub Release update check/download support.
 - Windows packaging scripts.
+- Public single-page landing site with a download button for the Windows setup.
 
 ## Requirements
 
@@ -65,6 +67,18 @@ Open:
 
 ```text
 http://127.0.0.1:48321
+```
+
+Run the landing page locally:
+
+```bash
+npm run site:dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:48330
 ```
 
 Companion API and packaged dashboard run on:
@@ -106,10 +120,16 @@ Monitor output: normal headphones/speakers
 
 ## Build
 
-Build the web app:
+Build the web dashboard:
 
 ```bash
 npm run build
+```
+
+Build the landing site:
+
+```bash
+npm run site:build
 ```
 
 Build the native companion:
@@ -124,7 +144,18 @@ Package Windows build:
 npm run package:windows
 ```
 
-This creates a portable bundle under `release/MemeBlip-Windows` and `release/MemeBlip-Windows.zip`.
+This creates:
+
+```text
+release/MemeBlip-Windows.zip
+release/MemeBlip-Setup.msi
+```
+
+The landing page download button points to:
+
+```text
+https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi
+```
 
 ## Documentation
 
@@ -132,6 +163,7 @@ This creates a portable bundle under `release/MemeBlip-Windows` and `release/Mem
 - [How MemeBlip works](docs/WORKING.md)
 - [Project index](docs/INDEX.md)
 - [Release guide](docs/RELEASE.md)
+- [Vercel deploy guide](docs/VERCEL_DEPLOY.md)
 - [Changelog](docs/CHANGELOG.md)
 - [Code review notes](docs/CODE_REVIEW.md)
 - [TODO](docs/TODO.md)
