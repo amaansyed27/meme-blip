@@ -7,7 +7,16 @@
 .pulse-line span { display: block; width: 35%; height: 100%; border-radius: inherit; background: var(--accent); animation: slidePulse 1.35s infinite; }
 @keyframes slidePulse { from { transform: translateX(-120%); } to { transform: translateX(310%); } }
 
-.setting-card { padding: 14px; }
+.toolbar-panel { padding: 0; margin: 0 0 14px; background: transparent; border: 0; box-shadow: none; }
+.flat-panel { border: 0; padding: 0; background: transparent; }
+.routing-compact-grid .compact-panel { border: 0; padding: 0; background: transparent; }
+.routing-mini-guide { display: none; }
+
+.settings-list { display: grid; gap: 8px; max-width: 780px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
+.setting-row p { margin: 4px 0 0; color: var(--soft); font-size: 12px; }
+.row-actions { display: flex; align-items: center; gap: 8px; }
+.setting-card { padding: 12px; }
 .setting-card p { color: var(--soft); line-height: 1.5; }
 
 .board-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
