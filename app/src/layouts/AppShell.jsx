@@ -34,12 +34,14 @@ export function AppShell({ children }) {
           <span className="brand-mark">MB</span>
           <span><strong>MemeBlip</strong><small>Tray soundboard</small></span>
         </button>
-        <nav>
+        <nav className="sidebar-nav">
           {routes.map((item) => {
             const Icon = iconMap[item.icon] || CircleDot;
+            const active = route === item.id;
             return (
-              <button key={item.id} className={route === item.id ? 'nav-item active' : 'nav-item'} onClick={() => setRoute(item.id)}>
-                <Icon size={18} />
+              <button key={item.id} className={active ? 'nav-item active' : 'nav-item'} onClick={() => setRoute(item.id)}>
+                {active ? <motion.span className="nav-selector" layoutId="nav-selector" transition={{ type: 'spring', stiffness: 420, damping: 34 }} /> : null}
+                <Icon className="nav-icon" size={18} />
                 <span>{item.label}</span>
               </button>
             );
