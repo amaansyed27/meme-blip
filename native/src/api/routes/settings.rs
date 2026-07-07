@@ -1,8 +1,8 @@
 use axum::{extract::State, http::HeaderMap, Json};
 
 use crate::models::{
-    AppSettings, SetActiveBoardRequest, SetInputDeviceRequest, SetMicPassthroughRequest,
-    SetMonitorDeviceRequest, SetOutputDeviceRequest,
+    AppSettings, CreateBoardRequest, SetActiveBoardRequest, SetFavoriteBoardRequest,
+    SetInputDeviceRequest, SetMicPassthroughRequest, SetMonitorDeviceRequest, SetOutputDeviceRequest,
 };
 
 use super::super::{apply_mic_passthrough, auth::verify, ApiError, SharedState};
@@ -60,6 +60,41 @@ pub(crate) async fn set_active_board(
     verify(&headers, &state)?;
     let mut settings = state.storage.settings();
     settings.active_board = payload.board.filter(|board| !board.trim().is_empty());
+    Ok(Json(state.storage.set_settings(settings)?))
+}
+
+pub(crate) async fn create_board(
+    State(state): State<SharedState>,
+    headers: HeaderMap,
+    Json(payload): Json<CreateBoardRequest>,
+) -> Result<Json<AppSettings>, ApiError> {
+    verify(&headers, &state)?;
+    let name = payload.name.trim();
+    let mut settings = state.storage.settings();
+    if !name.is_empty() && !settings.custom_boards.iter().any(|board| board.eq_ignore_ascii_case(name)) {
+        settings.custom_boards.push(name.to_string());
+    }
+    settings.active_board = Some(name.to_string()).filter(|board| !board.is_empty());
+    Ok(Json(state.storage.set_settings(settings)?))
+}
+
+pub(crate) async fn set_favorite_board(
+    State(state): State<SharedState>,
+    headers: HeaderMap,
+    Json(payload): Json<SetFavoriteBoardRequest>,
+) -> Result<Json<AppSettings>, ApiError> {
+    verify(&headers, &state)?;
+    let board = payload.board.trim();
+    let mut settings = state.storage.settings();
+    if !board.is_empty() {
+        if payload.favorite {
+            if !settings.favorite_boards.iter().any(|item| item.eq_ignore_ascii_case(board)) {
+                settings.favorite_boards.push(board.to_string());
+            }
+        } else {
+            settings.favorite_boards.retain(|item| !item.eq_ignore_ascii_case(board));
+        }
+    }
     Ok(Json(state.storage.set_settings(settings)?))
 }
 
