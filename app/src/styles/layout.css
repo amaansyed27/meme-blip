@@ -62,6 +62,7 @@ nav { display: grid; gap: 2px; margin-top: 22px; }
 .page::-webkit-scrollbar { width: 8px; }
 .page::-webkit-scrollbar-thumb { background: rgba(255,255,255,.11); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
 .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.page-action { display: flex; align-items: center; justify-content: flex-end; padding-top: 2px; }
 .eyebrow { margin: 0 0 6px; color: var(--accent); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; }
 h1 { max-width: 760px; margin: 0; font-size: clamp(24px, 2.4vw, 34px); line-height: 1.02; letter-spacing: -.04em; }
 h2 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
@@ -71,13 +72,13 @@ h3 { margin: 0; font-size: 13px; }
 .metric-grid, .split-grid, .routing-grid { gap: 8px; margin-bottom: 12px; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
 .split-grid { display: grid; grid-template-columns: 1fr; }
-.panel, .metric-card, .board-card, .setting-card, .toolbar-panel, .hotkey-row { border: 1px solid var(--line); border-radius: 5px; box-shadow: none; }
+.panel, .metric-card, .board-card, .setting-card, .hotkey-row { border: 1px solid var(--line); border-radius: 5px; box-shadow: none; }
 .panel { padding: 14px; }
-.panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .metric-card { padding: 14px; }
 .metric-card p, .metric-card span { margin: 0; color: var(--muted); }
 .metric-card strong { display: block; margin: 6px 0 4px; font-size: 24px; letter-spacing: -.04em; }
-.flat-panel { background: transparent; }
+.flat-panel { border: 0; padding: 0; background: transparent; }
 
 @media (max-width: 1180px) {
   .app-shell { grid-template-columns: 190px 1fr; }
