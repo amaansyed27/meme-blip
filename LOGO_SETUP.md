@@ -2,120 +2,116 @@
 
 Use this guide when replacing MemeBlip logos, tray icons, favicon, and future landing-page assets.
 
-## Recommended source files
+## Current active brand files
 
-Keep final source assets here:
+MemeBlip currently uses these pushed files:
 
 ```text
 assets/brand/memeblip-logo.svg
-assets/brand/memeblip-logo.png
 assets/brand/memeblip-icon-1024.png
 ```
 
-If `assets/brand/` does not exist yet, create it.
+Vite is configured with:
+
+```text
+publicDir: 'assets'
+```
+
+That means files inside `assets/` are served from the site root.
+
+Examples:
+
+```text
+assets/brand/memeblip-logo.svg      -> /brand/memeblip-logo.svg
+assets/brand/memeblip-icon-1024.png -> /brand/memeblip-icon-1024.png
+```
 
 ## Dashboard logo
 
-Current UI mark is rendered as text `MB` in:
+Dashboard sidebar logo is wired in:
 
 ```text
 app/src/layouts/AppShell.jsx
 ```
 
-Recommended implementation after adding files:
-
-1. Put the icon here:
-
-```text
-app/public/brand/memeblip-icon.svg
-```
-
-2. Replace the current brand mark span with an image:
+Current implementation:
 
 ```jsx
-<img className="brand-mark-img" src="/brand/memeblip-icon.svg" alt="MemeBlip" />
+<img className="brand-mark-img" src="/brand/memeblip-icon-1024.png" alt="MemeBlip logo" />
 ```
 
-3. Add or update CSS:
+Logo image styling is in:
+
+```text
+app/src/styles/layout.css
+```
+
+Class:
 
 ```css
-.brand-mark-img {
-  width: 34px;
-  height: 34px;
-  display: block;
-}
+.brand-mark-img
 ```
 
 ## Browser favicon
 
-Put these files in:
-
-```text
-app/public/favicon.ico
-app/public/favicon.svg
-app/public/apple-touch-icon.png
-app/public/web-app-manifest-192x192.png
-app/public/web-app-manifest-512x512.png
-```
-
-Then ensure the HTML references them. Check:
+Browser favicon and Apple touch icon are wired in:
 
 ```text
 index.html
 ```
 
-Recommended tags:
+Current tags:
 
 ```html
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/brand/memeblip-logo.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/brand/memeblip-icon-1024.png" />
 ```
 
 ## Tray companion icon
 
-The Rust tray companion should use an `.ico` file on Windows.
+The Rust tray companion embeds the pushed PNG at compile time.
 
-Recommended file path:
-
-```text
-native/assets/tray/memeblip-tray.ico
-```
-
-Also keep PNG source versions:
+Source file:
 
 ```text
-native/assets/tray/memeblip-tray-16.png
-native/assets/tray/memeblip-tray-32.png
-native/assets/tray/memeblip-tray-48.png
-native/assets/tray/memeblip-tray-256.png
+assets/brand/memeblip-icon-1024.png
 ```
 
-Where to wire it:
+Wired in:
 
 ```text
 native/src/tray.rs
 ```
 
-Expected implementation shape:
+Current implementation uses:
 
 ```rust
-let icon_path = std::path::PathBuf::from("native/assets/tray/memeblip-tray.ico");
+include_bytes!("../../assets/brand/memeblip-icon-1024.png")
 ```
 
-If the tray library needs raw RGBA instead of `.ico`, load the PNG source and convert it into the icon format expected by `tray-icon`.
+The image is decoded and resized to `32x32` for `tray-icon`.
+
+Dependency used:
+
+```text
+image
+```
+
+Configured in:
+
+```text
+native/Cargo.toml
+```
 
 ## Windows package icon
 
-Recommended file:
+Recommended future installer/shortcut icon:
 
 ```text
 assets/brand/memeblip-windows.ico
 ```
 
-Use this for future installer metadata and shortcuts.
-
-Where to wire packaging:
+Where to wire packaging later:
 
 ```text
 scripts/package-windows.ps1
@@ -123,20 +119,20 @@ scripts/package-windows.ps1
 
 ## Future landing page logo
 
-When the landing page is added, use:
+When the landing page is added, use the same root assets first:
 
 ```text
-site/public/logo.svg
-site/public/favicon.ico
-site/public/favicon.svg
-site/public/apple-touch-icon.png
+assets/brand/memeblip-logo.svg
+assets/brand/memeblip-icon-1024.png
 ```
 
-Suggested naming:
+If the landing page becomes a separate app later, copy or reference them as:
 
 ```text
 site/public/memeblip-logo.svg
 site/public/memeblip-mark.svg
+site/public/favicon.svg
+site/public/apple-touch-icon.png
 ```
 
 ## Asset naming checklist
@@ -148,7 +144,6 @@ memeblip-logo.svg
 memeblip-logo.png
 memeblip-mark.svg
 memeblip-icon-1024.png
-memeblip-tray.ico
 memeblip-windows.ico
 favicon.ico
 favicon.svg
@@ -161,9 +156,8 @@ web-app-manifest-512x512.png
 
 1. Export the master logo as SVG.
 2. Export PNG at 1024x1024.
-3. Generate favicon files from the PNG/SVG.
-4. Generate `.ico` files for Windows tray/package usage.
-5. Put files in the paths above.
-6. Wire the dashboard image first.
-7. Wire the tray icon second.
-8. Wire landing-page icons later when the site exists.
+3. Put them in `assets/brand/`.
+4. Keep `vite.config.js` using `publicDir: 'assets'`.
+5. Use `/brand/...` paths in the dashboard and HTML.
+6. Keep the tray icon using `include_bytes!` from `native/src/tray.rs`.
+7. Wire landing-page icons later when the site exists.
