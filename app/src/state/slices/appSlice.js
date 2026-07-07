@@ -16,11 +16,15 @@ export function createAppSlice(set) {
         const inputDevices = await companionClient.inputDevices();
         const settings = await companionClient.settings();
         const mixerStatus = await companionClient.mixerStatus();
+        const customBoards = settings.customBoards || [];
+        const favoriteBoards = settings.favoriteBoards || [];
 
         set({
           companionOnline: Boolean(health.ok),
           sounds,
-          boards: deriveBoards(sounds),
+          customBoards,
+          favoriteBoards,
+          boards: deriveBoards(sounds, customBoards, favoriteBoards),
           devices,
           inputDevices,
           selectedDeviceId: settings.outputDeviceId || null,
