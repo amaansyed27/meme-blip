@@ -7,6 +7,8 @@ use tao::{
 use tao::platform::windows::EventLoopBuilderExtWindows;
 use tray_icon::{menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem}, Icon, TrayIconBuilder};
 
+const TRAY_ICON_PNG: &[u8] = include_bytes!("../../assets/brand/memeblip-icon-1024.png");
+
 pub fn spawn_dashboard_tray() {
     thread::spawn(|| {
         if let Err(error) = run_tray() {
@@ -81,19 +83,8 @@ fn bundled_dist_dir() -> PathBuf {
 }
 
 fn make_icon() -> Result<Icon, Box<dyn std::error::Error>> {
-    let size = 32u32;
-    let mut rgba = Vec::with_capacity((size * size * 4) as usize);
-    for y in 0..size {
-        for x in 0..size {
-            let dx = x as i32 - 16;
-            let dy = y as i32 - 16;
-            let inside = dx * dx + dy * dy <= 196;
-            if inside {
-                rgba.extend_from_slice(&[125, 255, 196, 255]);
-            } else {
-                rgba.extend_from_slice(&[0, 0, 0, 0]);
-            }
-        }
-    }
-    Ok(Icon::from_rgba(rgba, size, size)?)
+    let image = image::load_from_memory(TRAY_ICON_PNG)?
+        .resize_exact(32, 32, image::imageops::FilterType::Lanczos3)
+        .to_rgba8();
+    Ok(Icon::from_rgba(image.into_raw(), 32, 32)?)
 }
