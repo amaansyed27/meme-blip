@@ -15,8 +15,28 @@ function Get-ToolPath($name) {
   $command = Get-Command $name -ErrorAction SilentlyContinue
   if ($command) { return $command.Source }
 
-  $wixBin = Join-Path ${env:ProgramFiles(x86)} "WiX Toolset v3.11\bin\$name"
-  if (Test-Path $wixBin) { return $wixBin }
+  $roots = @()
+  if (${env:ProgramFiles(x86)}) { $roots += ${env:ProgramFiles(x86)} }
+  if ($env:ProgramFiles) { $roots += $env:ProgramFiles }
+
+  foreach ($root in $roots) {
+    $toolsets = Get-ChildItem -Path $root -Directory -Filter "WiX Toolset v*" -ErrorAction SilentlyContinue | Sort-Object Name -Descending
+    foreach ($toolset in $toolsets) {
+      $candidate = Join-Path $toolset.FullName "bin\$name"
+      if (Test-Path $candidate) { return $candidate }
+    }
+  }
+
+  $commonCandidates = @(
+    "C:\Program Files (x86)\WiX Toolset v3.14\bin\$name",
+    "C:\Program Files (x86)\WiX Toolset v3.11\bin\$name",
+    "C:\Program Files\WiX Toolset v3.14\bin\$name",
+    "C:\Program Files\WiX Toolset v3.11\bin\$name"
+  )
+
+  foreach ($candidate in $commonCandidates) {
+    if (Test-Path $candidate) { return $candidate }
+  }
 
   return $null
 }
@@ -122,9 +142,14 @@ $candle = Get-ToolPath "candle.exe"
 $light = Get-ToolPath "light.exe"
 
 if (!$heat -or !$candle -or !$light) {
-  Write-Warning "WiX Toolset was not found. Portable zip is ready, but MSI was skipped. Install WiX Toolset v3.11 to build MemeBlip-Setup.msi."
+  Write-Warning "WiX Toolset was not found. Portable zip is ready, but MSI was skipped. Install WiX Toolset v3.11 or newer to build MemeBlip-Setup.msi."
   exit 0
 }
+
+Write-Host "Using WiX tools:"
+Write-Host "  heat:   $heat"
+Write-Host "  candle: $candle"
+Write-Host "  light:  $light"
 
 $HarvestWxs = Join-Path $InstallerDir "MemeBlipFiles.wxs"
 $ProductWxs = Join-Path $InstallerDir "Product.wxs"
