@@ -8,6 +8,7 @@ anyhow = "1"
 axum = { version = "0.7", features = ["multipart"] }
 cpal = "0.15"
 directories = "5"
+image = { version = "0.25", default-features = false, features = ["png"] }
 open = "5"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 rodio = "0.19"
