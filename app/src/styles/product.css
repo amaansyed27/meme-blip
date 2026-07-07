@@ -1,22 +1,22 @@
-.status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 999px; color: var(--mint); background: rgba(143,232,188,.1); font-size: 12px; }
-.status-pill.down { color: var(--red); background: rgba(213,111,111,.1); }
+.status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: 999px; color: var(--accent-strong); background: var(--surface); font-size: 12px; }
+.status-pill.down { color: var(--red); background: rgba(213,134,127,.1); }
 
-.signal-panel { position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(143,232,188,.08), var(--panel)); }
+.signal-panel { position: relative; overflow: hidden; }
 .signal-panel p, .route-diagram p, .muted-copy { color: var(--soft); line-height: 1.55; }
-.pulse-line { height: 5px; margin-top: 20px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
-.pulse-line span { display: block; width: 35%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, transparent, var(--mint)); animation: slidePulse 1.35s infinite; }
+.pulse-line { height: 3px; margin-top: 20px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.pulse-line span { display: block; width: 35%; height: 100%; border-radius: inherit; background: var(--accent); animation: slidePulse 1.35s infinite; }
 @keyframes slidePulse { from { transform: translateX(-120%); } to { transform: translateX(310%); } }
 
 .setting-card { padding: 14px; }
 .setting-card p { color: var(--soft); line-height: 1.5; }
 
-.board-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.board-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 
-.hotkey-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; }
+.hotkey-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
 .hotkey-row > div { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hotkey-row small { color: var(--muted); margin-left: 6px; }
-.hotkey-row.important { border-color: rgba(143,232,188,.35); }
-.mini-dot { width: 10px; height: 10px; border-radius: 99px; }
+.hotkey-row.important { border-color: rgba(227,218,199,.24); }
+.mini-dot { width: 8px; height: 8px; border-radius: 99px; background: var(--accent); }
 
 @media (max-width: 1180px) {
   .board-row { grid-template-columns: 1fr; }
