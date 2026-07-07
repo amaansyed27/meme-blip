@@ -3,35 +3,37 @@ import { ArrowRight, Download, ExternalLink, Mic2, MonitorSpeaker, Play, Radio, 
 
 const downloadUrl = import.meta.env.VITE_MEMEBLIP_DOWNLOAD_URL || 'https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi';
 
-const productRows = [
-  ['Alt + 1', 'vine-boom', 'Meme Kit'],
-  ['Alt + 2', 'among-us-role-reveal', 'Meme Kit'],
-  ['Alt + 3', 'sher', 'Meme Kit']
+const clips = [
+  ['Alt + 1', 'vine-boom', '00:02'],
+  ['Alt + 2', 'role-reveal', '00:04'],
+  ['Alt + 3', 'sher', '00:03'],
+  ['Alt + 4', 'anime-ahh', '00:01']
 ];
 
-const details = [
-  { icon: Zap, label: 'Board-scoped hotkeys', copy: 'Select one board and only those clips answer your keys.' },
-  { icon: Mic2, label: 'Mic passthrough', copy: 'Keep your voice in the same route as MemeBlip clips.' },
-  { icon: MonitorSpeaker, label: 'Monitor output', copy: 'Hear clips locally while the call receives the virtual mic.' },
-  { icon: ShieldCheck, label: 'Local companion', copy: 'Playback and routing stay on localhost, not a cloud bot.' }
+const pillars = [
+  { icon: Zap, title: 'One active board', copy: 'Your current board owns the keys, so hotkeys stay predictable in-game and in calls.' },
+  { icon: Mic2, title: 'Voice stays in route', copy: 'Optional mic passthrough keeps your real microphone and clips in the same virtual mic path.' },
+  { icon: MonitorSpeaker, title: 'Hear what you send', copy: 'Monitor clips through your own output while the call receives CABLE Output.' }
 ];
+
+const routeSteps = ['Physical mic', 'MemeBlip mixer', 'CABLE Input', 'CABLE Output', 'Discord / Meet / Game'];
 
 const setup = [
-  ['01', 'Install VB-CABLE', 'One virtual route: CABLE Input to CABLE Output.'],
-  ['02', 'Pick devices', 'Mic, route, and monitor are selected inside MemeBlip.'],
-  ['03', 'Open your app', 'Use CABLE Output as the microphone in Meet, Discord, Zoom, or Valorant.'],
-  ['04', 'Trigger clips', 'Press your linked hotkeys without changing windows.']
+  ['01', 'Install the setup', 'Use the Windows installer from GitHub Releases.'],
+  ['02', 'Select CABLE Input', 'MemeBlip sends clips into the virtual route.'],
+  ['03', 'Set app mic to CABLE Output', 'Your game or call receives the mixed signal.'],
+  ['04', 'Trigger with hotkeys', 'Leave MemeBlip in the tray and play clips without tab switching.']
 ];
 
 export function App() {
   const { scrollYProgress } = useScroll();
-  const productY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const lineX = useTransform(scrollYProgress, [0, 1], ['-12%', '24%']);
+  const heroDrift = useTransform(scrollYProgress, [0, 0.7], [0, -72]);
+  const beamDrift = useTransform(scrollYProgress, [0, 1], ['-18%', '18%']);
 
   return (
     <main className="site-shell">
-      <div className="site-noise" />
-      <motion.div className="route-line-bg" style={{ x: lineX }} />
+      <div className="page-grain" />
+      <motion.div className="signal-beam" style={{ x: beamDrift }} />
 
       <nav className="nav" aria-label="Main navigation">
         <a className="nav-brand" href="#top" aria-label="MemeBlip home">
@@ -40,59 +42,68 @@ export function App() {
         </a>
         <div className="nav-links">
           <a href="#routing">Routing</a>
-          <a href="#setup">Setup</a>
+          <a href="#install">Install</a>
           <a href="https://github.com/amaansyed27/meme-blip" target="_blank" rel="noreferrer"><ExternalLink size={15} /> GitHub</a>
-          <a className="download-link" href={downloadUrl}>Download</a>
+          <a className="nav-cta" href={downloadUrl}>Download</a>
         </div>
       </nav>
 
       <section id="top" className="hero-section">
-        <motion.div className="hero-copy" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
+        <motion.div className="hero-copy" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}>
           <p className="kicker"><Sparkles size={14} /> Windows tray soundboard</p>
-          <h1>Soundboard clips in your mic route. No tab switching.</h1>
+          <h1>Put memes directly into your mic.</h1>
           <p className="hero-lede">
-            MemeBlip routes short clips, optional mic passthrough, and local monitoring through a small native companion. Built for games, meetings, and calls that listen to a microphone.
+            MemeBlip mixes short clips and optional mic passthrough into a virtual microphone route, so your game or call hears the sound without you leaving the window.
           </p>
           <div className="hero-actions">
-            <a className="button-primary" href={downloadUrl}><Download size={18} /> Download setup</a>
-            <a className="button-secondary" href="#routing">How routing works <ArrowRight size={16} /></a>
+            <a className="button-primary" href={downloadUrl}><Download size={18} /> Download Windows setup</a>
+            <a className="button-secondary" href="#routing">View audio route <ArrowRight size={16} /></a>
           </div>
-          <div className="meta-row" aria-label="Product facts">
-            <span>Localhost companion</span>
+          <div className="hero-proof">
+            <span>Local companion</span>
             <span>VB-CABLE route</span>
-            <span>Active-board hotkeys</span>
+            <span>Board hotkeys</span>
           </div>
         </motion.div>
 
-        <motion.aside className="product-card" style={{ y: productY }} initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.65 }}>
-          <div className="product-topbar">
-            <div><span /> <span /> <span /></div>
-            <small>Companion online</small>
-          </div>
-          <div className="product-heading">
+        <motion.aside className="hero-stage" style={{ y: heroDrift }} initial={{ opacity: 0, y: 26, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} aria-label="MemeBlip product preview">
+          <div className="stage-orbit orbit-one" />
+          <div className="stage-orbit orbit-two" />
+          <div className="stage-core">
             <img src="/brand/memeblip-icon-1024.png" alt="" />
-            <div><b>Currently selected board</b><p>Meme Kit owns the hotkeys</p></div>
+            <strong>Live route</strong>
+            <small>Board: Meme Kit</small>
           </div>
-          <div className="clip-stack">
-            {productRows.map(([key, name, board], index) => (
-              <motion.div className="clip-row" key={name} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.24 + index * 0.08 }}>
-                <button aria-label={`Play ${name}`}><Play size={12} fill="currentColor" /></button>
-                <div><strong>{name}</strong><small>{board}</small></div>
+          <div className="wave-card">
+            <div className="wave-header"><Radio size={15} /> Signal preview</div>
+            <div className="wave-bars" aria-hidden="true">
+              {Array.from({ length: 28 }).map((_, index) => <span key={index} style={{ '--i': index }} />)}
+            </div>
+          </div>
+          <div className="clip-panel">
+            <div className="clip-panel-head"><b>Armed hotkeys</b><span>4 clips</span></div>
+            {clips.map(([key, name, length], index) => (
+              <motion.div className="clip-item" key={name} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.26 + index * 0.06 }}>
+                <button aria-label={`Preview ${name}`}><Play size={11} fill="currentColor" /></button>
+                <div><strong>{name}</strong><small>{length}</small></div>
                 <kbd>{key}</kbd>
               </motion.div>
             ))}
           </div>
-          <div className="route-meter"><span /></div>
         </motion.aside>
       </section>
 
-      <section className="detail-strip" aria-label="Feature details">
-        {details.map((item, index) => {
+      <section className="marquee-row" aria-label="Supported use cases">
+        <span>Discord</span><span>Google Meet</span><span>Zoom</span><span>Valorant</span><span>OBS monitor</span><span>Any mic-based app</span>
+      </section>
+
+      <section className="pillar-section">
+        {pillars.map((item, index) => {
           const Icon = item.icon;
           return (
-            <motion.article key={item.label} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ delay: index * 0.04 }}>
-              <Icon size={18} />
-              <h2>{item.label}</h2>
+            <motion.article key={item.title} initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ delay: index * 0.05 }}>
+              <Icon size={20} />
+              <h2>{item.title}</h2>
               <p>{item.copy}</p>
             </motion.article>
           );
@@ -102,26 +113,31 @@ export function App() {
       <section id="routing" className="routing-section">
         <div className="section-copy">
           <p className="kicker"><Radio size={14} /> Routing</p>
-          <h2>Designed around one route that actually makes sense.</h2>
-          <p>MemeBlip sends clips to CABLE Input. Your target app listens to CABLE Output. Your headphones stay your normal speaker output.</p>
+          <h2>No fake system audio magic. Just a clean mic route.</h2>
+          <p>MemeBlip is built around the stable path: clips and optional voice go to CABLE Input, then your target app uses CABLE Output as the microphone.</p>
         </div>
-        <div className="routing-map">
-          <div className="route-node physical"><b>Physical mic</b><small>Your headset mic</small></div>
-          <div className="route-node app"><b>MemeBlip</b><small>Clips + optional voice</small></div>
-          <div className="route-node cable"><b>CABLE Input</b><small>Virtual route</small></div>
-          <div className="route-node target"><b>CABLE Output</b><small>App microphone</small></div>
-          <div className="route-arrow a1" /><div className="route-arrow a2" /><div className="route-arrow a3" />
+        <div className="route-timeline">
+          {routeSteps.map((step, index) => (
+            <motion.div className="route-step" key={step} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.06 }}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <b>{step}</b>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      <section id="setup" className="setup-section">
-        <div className="section-copy narrow">
-          <p className="kicker">Setup</p>
-          <h2>Four steps. Then leave it in the tray.</h2>
+      <section id="install" className="install-section">
+        <div className="install-card">
+          <div>
+            <p className="kicker"><ShieldCheck size={14} /> Release build</p>
+            <h2>Install once. Keep it in the tray.</h2>
+            <p>The setup installs the Windows companion and dashboard assets. For virtual mic routing, install VB-CABLE and select CABLE Output in the target app.</p>
+          </div>
+          <a className="button-primary" href={downloadUrl}><Download size={18} /> Download MemeBlip setup</a>
         </div>
         <div className="setup-list">
           {setup.map(([number, title, copy]) => (
-            <motion.article key={number} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <motion.article key={number} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <span>{number}</span>
               <div><h3>{title}</h3><p>{copy}</p></div>
             </motion.article>
@@ -130,12 +146,15 @@ export function App() {
       </section>
 
       <footer className="site-footer">
-        <div>
+        <div className="footer-brand">
           <img src="/brand/memeblip-icon-1024.png" alt="" />
-          <span>MemeBlip</span>
-          <small>Local tray soundboard for Windows.</small>
+          <div><span>MemeBlip</span><small>Local tray soundboard for Windows.</small></div>
         </div>
-        <a className="footer-download" href={downloadUrl}><Download size={16} /> Download setup</a>
+        <div className="footer-links">
+          <a href="#routing">Routing</a>
+          <a href="#install">Install</a>
+          <a href={downloadUrl}>Download</a>
+        </div>
       </footer>
     </main>
   );
