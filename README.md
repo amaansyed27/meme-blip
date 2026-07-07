@@ -131,10 +131,13 @@ This creates a portable bundle under `release/MemeBlip-Windows` and `release/Mem
 - [Architecture](docs/ARCHITECTURE.md)
 - [How MemeBlip works](docs/WORKING.md)
 - [Project index](docs/INDEX.md)
+- [Release guide](docs/RELEASE.md)
 - [Code review notes](docs/CODE_REVIEW.md)
 - [TODO](docs/TODO.md)
 - [Logo and icon placement](LOGO_SETUP.md)
 - [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+- [Support](SUPPORT.md)
 
 ## License
 
