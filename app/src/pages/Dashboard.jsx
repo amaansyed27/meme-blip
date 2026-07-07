@@ -11,8 +11,10 @@ export function Dashboard() {
   const companionOnline = useMemeBlipStore((state) => state.companionOnline);
   const activeBoard = useMemeBlipStore((state) => state.activeBoard);
   const setActiveBoard = useMemeBlipStore((state) => state.setActiveBoard);
+  const setFavoriteBoard = useMemeBlipStore((state) => state.setFavoriteBoard);
   const setRoute = useMemeBlipStore((state) => state.setRoute);
-  const favoriteBoards = boards.slice(0, 4);
+  const selectedBoard = boards.find((board) => board.name === activeBoard) || boards[0];
+  const selectedBoardSounds = selectedBoard ? sounds.filter((sound) => sound.board === selectedBoard.name) : [];
 
   async function openBoard(boardName) {
     await setActiveBoard(boardName);
@@ -35,14 +37,14 @@ export function Dashboard() {
         <MetricCard label="Route" value="Cable" detail="CABLE Output for apps" />
       </section>
 
-      <section className="dashboard-section">
-        <div className="section-heading"><h2>Favorite soundboards</h2><span className="muted-copy">Open a board to manage its clips</span></div>
-        {favoriteBoards.length ? (
-          <div className="board-grid favorite-board-grid">
-            {favoriteBoards.map((board) => <BoardCard key={board.id} board={board} active={activeBoard === board.name} favorite onActivate={openBoard} actionLabel="Open soundboard" />)}
+      <section className="dashboard-section selected-board-section">
+        <div className="section-heading"><h2>Currently selected board</h2><span className="muted-copy">This board owns the linked hotkeys</span></div>
+        {selectedBoard ? (
+          <div className="board-grid selected-board-grid">
+            <BoardCard board={selectedBoard} active favorite={selectedBoard.favorite} previewSounds={selectedBoardSounds} onActivate={openBoard} onFavorite={setFavoriteBoard} actionLabel="Open selected board" />
           </div>
         ) : (
-          <div className="empty-state">Import clips to create your first soundboard.</div>
+          <div className="empty-state">Create or import a soundboard to link hotkeys.</div>
         )}
       </section>
     </>
