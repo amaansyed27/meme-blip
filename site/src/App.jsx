@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Download, ExternalLink, Mic2, MonitorSpeaker, Play, Radio, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, Download, ExternalLink, Mic2, MonitorSpeaker, Play, Radio, ShieldCheck, Sparkles, Star, Zap } from 'lucide-react';
 
+const repoUrl = 'https://github.com/amaansyed27/meme-blip';
 const downloadUrl = import.meta.env.VITE_MEMEBLIP_DOWNLOAD_URL || 'https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi';
 
 const clips = [
@@ -41,7 +42,8 @@ export function App() {
         <div className="nav-links">
           <a href="#routing">Routing</a>
           <a href="#install">Install</a>
-          <a href="https://github.com/amaansyed27/meme-blip" target="_blank" rel="noreferrer"><ExternalLink size={15} /> GitHub</a>
+          <a href={repoUrl} target="_blank" rel="noreferrer"><ExternalLink size={15} /> GitHub</a>
+          <a className="nav-star" href={repoUrl} target="_blank" rel="noreferrer"><Star size={15} /> Star repo</a>
           <a className="nav-cta" href={downloadUrl}>Download</a>
         </div>
       </nav>
@@ -55,7 +57,8 @@ export function App() {
           </p>
           <div className="hero-actions">
             <a className="button-primary" href={downloadUrl}><Download size={18} /> Download Windows setup</a>
-            <a className="button-secondary" href="#routing">View audio route <ArrowRight size={16} /></a>
+            <a className="button-secondary" href={repoUrl} target="_blank" rel="noreferrer"><Star size={16} /> Star on GitHub</a>
+            <a className="button-tertiary" href="#routing">View audio route <ArrowRight size={16} /></a>
           </div>
           <div className="hero-proof">
             <span>Local companion</span>
@@ -131,7 +134,10 @@ export function App() {
             <h2>Install once. Keep it in the tray.</h2>
             <p>The setup installs the Windows companion and dashboard assets. For virtual mic routing, install VB-CABLE and select CABLE Output in the target app.</p>
           </div>
-          <a className="button-primary" href={downloadUrl}><Download size={18} /> Download MemeBlip setup</a>
+          <div className="install-actions">
+            <a className="button-primary" href={downloadUrl}><Download size={18} /> Download MemeBlip setup</a>
+            <a className="button-secondary" href={repoUrl} target="_blank" rel="noreferrer"><Star size={16} /> Star the repo</a>
+          </div>
         </div>
         <div className="setup-list">
           {setup.map(([number, title, copy]) => (
@@ -151,6 +157,7 @@ export function App() {
         <div className="footer-links">
           <a href="#routing">Routing</a>
           <a href="#install">Install</a>
+          <a href={repoUrl} target="_blank" rel="noreferrer">Star repo</a>
           <a href={downloadUrl}>Download</a>
         </div>
       </footer>
