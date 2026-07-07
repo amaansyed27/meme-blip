@@ -1,0 +1,17 @@
+{
+  "name": "MemeBlip",
+  "short_name": "MemeBlip",
+  "description": "Local-first Windows tray soundboard for Discord, games, meetings, and mic-based apps.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070706",
+  "theme_color": "#070706",
+  "icons": [
+    {
+      "src": "/brand/memeblip-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
