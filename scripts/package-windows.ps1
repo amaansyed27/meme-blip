@@ -131,8 +131,8 @@ $HarvestWixObj = Join-Path $InstallerDir "MemeBlipFiles.wixobj"
 $iconXml = ""
 $shortcutIconAttribute = ""
 if (Test-Path $IconPath) {
-  $iconXml = "<Icon Id=\"MemeBlipIcon.ico\" SourceFile=\"$IconPath\" />`n    <Property Id=\"ARPPRODUCTICON\" Value=\"MemeBlipIcon.ico\" />"
-  $shortcutIconAttribute = " Icon=\"MemeBlipIcon.ico\""
+  $iconXml = '<Icon Id="MemeBlipIcon.ico" SourceFile="' + $IconPath + '" />' + "`n" + '    <Property Id="ARPPRODUCTICON" Value="MemeBlipIcon.ico" />'
+  $shortcutIconAttribute = ' Icon="MemeBlipIcon.ico"'
 }
 
 @"
