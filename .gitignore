@@ -35,3 +35,4 @@ third_party/vb-cable/extracted/
 third_party/vb-cable/*.zip
 third_party/vb-cable/VBCABLE_Driver_Pack45/
 
+.vercel
