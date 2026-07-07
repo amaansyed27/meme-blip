@@ -1,6 +1,33 @@
-# MemeBlip
+<p align="center">
+  <img src="assets/brand/memeblip-icon-1024.png" alt="MemeBlip logo" width="112" />
+</p>
+
+<h1 align="center">MemeBlip</h1>
+
+<p align="center">
+  <strong>Local-first Windows tray soundboard for Discord, games, calls, meetings, and virtual microphone routing.</strong>
+</p>
+
+<p align="center">
+  <a href="https://meme-blip.vercel.app/">Landing page</a>
+  ·
+  <a href="https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi">Download Windows setup</a>
+  ·
+  <a href="docs/WORKING.md">How it works</a>
+</p>
+
+<p align="center">
+  <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-eadfca?labelColor=11100d" />
+  <img alt="Local first" src="https://img.shields.io/badge/local--first-yes-eadfca?labelColor=11100d" />
+  <img alt="Built with Rust and React" src="https://img.shields.io/badge/Rust%20%2B%20React-desktop-eadfca?labelColor=11100d" />
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-eadfca?labelColor=11100d" />
+</p>
 
 MemeBlip is a local-first tray soundboard for games, calls, and meetings. It lets you import short clips, organize them into soundboards, trigger them with hotkeys, and route clip audio plus optional mic passthrough into apps through VB-CABLE.
+
+## Discoverability tags
+
+`windows-soundboard` `soundboard` `tray-soundboard` `discord-soundboard` `valorant-soundboard` `google-meet-soundboard` `zoom-soundboard` `virtual-microphone` `mic-routing` `vb-cable` `audio-routing` `hotkey-soundboard` `rust` `react` `vite`
 
 The project has three parts:
 
