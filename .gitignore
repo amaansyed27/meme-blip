@@ -31,3 +31,7 @@ third_party/vb-cable/extracted/
 
 *.tmp
 *.bak
+
+third_party/vb-cable/*.zip
+third_party/vb-cable/VBCABLE_Driver_Pack45/
+
