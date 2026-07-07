@@ -14,7 +14,7 @@ $Version = "0.1.0"
 function Invoke-Checked($FilePath, [string[]]$Arguments) {
   & $FilePath @Arguments
   if ($LASTEXITCODE -ne 0) {
-    throw "Command failed with exit code $LASTEXITCODE: $FilePath $($Arguments -join ' ')"
+    throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $($Arguments -join ' ')"
   }
 }
 
