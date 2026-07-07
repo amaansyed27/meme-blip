@@ -119,7 +119,7 @@ function New-FileComponentXml($file, $indent) {
   $script:ComponentCounter++
   $componentId = "CMP{0:D5}" -f $script:ComponentCounter
   $fileId = "FIL{0:D5}" -f $script:ComponentCounter
-  [void]$script:ComponentRefs.Add("      <ComponentRef Id=\"$componentId\" />")
+  [void]$script:ComponentRefs.Add(('      <ComponentRef Id="{0}" />' -f $componentId))
   $source = Escape-Xml $file.FullName
   return @"
 $indent<Component Id="$componentId" Guid="*">
