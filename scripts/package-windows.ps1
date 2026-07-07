@@ -28,6 +28,8 @@ function New-IcoFromPng($SourcePng, $DestinationIco) {
 
   foreach ($size in $sizes) {
     $source = [System.Drawing.Image]::FromFile($SourcePng)
+    $graphics = $null
+    $bitmap = $null
     try {
       $bitmap = New-Object System.Drawing.Bitmap $size, $size
       $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
@@ -56,8 +58,10 @@ function New-IcoFromPng($SourcePng, $DestinationIco) {
     foreach ($entry in $pngEntries) {
       $size = [int]$entry[0]
       $bytes = [byte[]]$entry[1]
-      $writer.Write([byte](if ($size -eq 256) { 0 } else { $size }))
-      $writer.Write([byte](if ($size -eq 256) { 0 } else { $size }))
+      $dimensionByte = [byte]$size
+      if ($size -eq 256) { $dimensionByte = [byte]0 }
+      $writer.Write($dimensionByte)
+      $writer.Write($dimensionByte)
       $writer.Write([byte]0)
       $writer.Write([byte]0)
       $writer.Write([UInt16]1)
