@@ -1,16 +1,47 @@
 import { companionClient } from '../../services/companionClient.js';
 import { applySoundUpdate, deriveBoards } from '../boardUtils.js';
 
+function applyBoardSettings(set, get, settings) {
+  const customBoards = settings.customBoards || [];
+  const favoriteBoards = settings.favoriteBoards || [];
+  set({
+    customBoards,
+    favoriteBoards,
+    activeBoard: settings.activeBoard || null,
+    boards: deriveBoards(get().sounds, customBoards, favoriteBoards)
+  });
+}
+
 export function createSoundSlice(set, get) {
   return {
     sounds: [],
     boards: [],
+    customBoards: [],
+    favoriteBoards: [],
     activeBoard: null,
     setActiveBoard: async (activeBoard) => {
       set({ activeBoard });
       try {
         const settings = await companionClient.setActiveBoard(activeBoard);
-        set({ activeBoard: settings.activeBoard || null });
+        applyBoardSettings(set, get, settings);
+      } catch (error) {
+        set({ error: error.message });
+      }
+    },
+    createBoard: async (name) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      try {
+        const settings = await companionClient.createBoard(trimmed);
+        applyBoardSettings(set, get, settings);
+      } catch (error) {
+        set({ error: error.message });
+      }
+    },
+    setFavoriteBoard: async (board, favorite) => {
+      try {
+        const settings = await companionClient.setFavoriteBoard(board, favorite);
+        applyBoardSettings(set, get, settings);
       } catch (error) {
         set({ error: error.message });
       }
@@ -40,7 +71,7 @@ export function createSoundSlice(set, get) {
       try {
         const sound = await companionClient.importSound({ file, board: get().activeBoard || 'Meme Kit', volume: 80 });
         const sounds = [sound, ...get().sounds];
-        set({ sounds, boards: deriveBoards(sounds) });
+        set({ sounds, boards: deriveBoards(sounds, get().customBoards, get().favoriteBoards) });
       } catch (error) {
         set({ error: error.message });
       }
@@ -49,7 +80,7 @@ export function createSoundSlice(set, get) {
       try {
         const updated = await companionClient.updateSound(id, patch);
         const sounds = applySoundUpdate(get().sounds, updated);
-        set({ sounds, boards: deriveBoards(sounds) });
+        set({ sounds, boards: deriveBoards(sounds, get().customBoards, get().favoriteBoards) });
       } catch (error) {
         set({ error: error.message });
       }
@@ -58,7 +89,7 @@ export function createSoundSlice(set, get) {
       try {
         const updated = await companionClient.assignHotkey(id, hotkey);
         const sounds = applySoundUpdate(get().sounds, updated);
-        set({ sounds, boards: deriveBoards(sounds) });
+        set({ sounds, boards: deriveBoards(sounds, get().customBoards, get().favoriteBoards) });
       } catch (error) {
         set({ error: error.message });
       }
@@ -67,7 +98,7 @@ export function createSoundSlice(set, get) {
       try {
         await companionClient.deleteSound(id);
         const sounds = get().sounds.filter((sound) => sound.id !== id);
-        set({ sounds, boards: deriveBoards(sounds) });
+        set({ sounds, boards: deriveBoards(sounds, get().customBoards, get().favoriteBoards) });
       } catch (error) {
         set({ error: error.message });
       }
