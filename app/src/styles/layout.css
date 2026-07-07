@@ -31,6 +31,7 @@ button { border: 0; cursor: pointer; color: inherit; }
 
 .brand:hover { background: var(--surface); transform: none; }
 .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 4px; font-size: 12px; font-weight: 900; }
+.brand-mark-img { width: 34px; height: 34px; display: block; border-radius: 4px; object-fit: cover; background: var(--panel); }
 .brand strong, .brand small { display: block; }
 .brand strong { font-size: 14px; }
 .brand small { margin-top: 2px; color: var(--muted); font-size: 12px; }
