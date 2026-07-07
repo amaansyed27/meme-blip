@@ -27,6 +27,8 @@ pub(crate) fn router() -> Router<SharedState> {
         .route("/settings/monitor-device", post(settings::set_monitor_device))
         .route("/settings/input-device", post(settings::set_input_device))
         .route("/settings/active-board", post(settings::set_active_board))
+        .route("/settings/boards", post(settings::create_board))
+        .route("/settings/favorite-board", post(settings::set_favorite_board))
         .route("/settings/mic-passthrough", post(settings::set_mic_passthrough))
         .route("/updates/check", get(super::check_update))
         .route("/updates/download", post(super::download_update))
