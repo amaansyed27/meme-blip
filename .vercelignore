@@ -1,0 +1,16 @@
+# Vercel should deploy only the landing site.
+# Ignore every root item first, then allow the site inputs needed by `npm run site:build`.
+/*
+
+!assets
+!assets/**
+
+!site
+!site/**
+
+!package.json
+!package-lock.json
+!vercel.json
+
+!README.md
+!LICENSE
