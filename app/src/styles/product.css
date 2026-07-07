@@ -12,10 +12,19 @@
 .routing-compact-grid .compact-panel { border: 0; padding: 0; background: transparent; }
 .routing-mini-guide { display: none; }
 
-.settings-list { display: grid; gap: 8px; max-width: 780px; }
-.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
-.setting-row p { margin: 4px 0 0; color: var(--soft); font-size: 12px; }
+.settings-list { display: grid; gap: 8px; max-width: 900px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 62px; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); }
+.setting-copy { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.setting-copy svg { color: var(--accent); flex: 0 0 auto; }
+.setting-copy strong { font-size: 13px; }
+.setting-row p { margin: 4px 0 0; color: var(--soft); font-size: 12px; max-width: 540px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-actions { display: flex; align-items: center; gap: 8px; }
+.setting-select { min-width: 180px; height: 34px; border: 1px solid var(--line); border-radius: 4px; padding: 0 10px; color: var(--text); background: var(--panel); outline: 0; }
+.setting-toggle { min-width: 64px; height: 32px; border: 1px solid var(--line); border-radius: 4px; color: var(--soft); background: var(--panel); font-weight: 700; }
+.setting-toggle.on { color: #181613; background: var(--accent-strong); }
+body.theme-light .setting-toggle.on { color: #fffaf0; background: #2f291f; }
+.setting-status { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); font-size: 12px; white-space: nowrap; }
+.setting-status.online { color: var(--accent-strong); }
 .setting-card { padding: 12px; }
 .setting-card p { color: var(--soft); line-height: 1.5; }
 
@@ -29,4 +38,6 @@
 
 @media (max-width: 1180px) {
   .board-row { grid-template-columns: 1fr; }
+  .setting-row { align-items: flex-start; flex-direction: column; }
+  .setting-row p { white-space: normal; }
 }
