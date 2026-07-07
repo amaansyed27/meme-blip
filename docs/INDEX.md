@@ -38,19 +38,25 @@ Support checklist for debugging user issues.
 LOGO_SETUP.md
 ```
 
-Where to place app icons, tray icons, site icons, and favicons.
+Where app icons, tray icons, site icons, and favicons are wired.
 
 ```text
 package.json
 ```
 
-Node scripts and frontend dependencies.
+Node scripts for the dashboard, landing site, native companion, and Windows package flow.
 
 ```text
 vite.config.js
 ```
 
-Vite development/build configuration.
+Dashboard Vite configuration.
+
+```text
+vercel.json
+```
+
+Vercel configuration for deploying the public landing page from `site/`.
 
 ```text
 tsconfig.json
@@ -59,14 +65,48 @@ tsconfig.json
 Frontend typecheck/build configuration.
 
 ```text
-.github/workflows/
+.github/workflows/check.yml
 ```
 
-GitHub Actions checks and release automation.
+CI check for dashboard build, landing site build, and native companion build.
+
+```text
+.github/workflows/release.yml
+```
+
+Windows release packaging workflow that uploads the MSI setup and portable zip to GitHub Releases.
+
+## site/
+
+Public MemeBlip landing page.
+
+```text
+site/index.html
+```
+
+Landing page HTML shell and favicon tags.
+
+```text
+site/vite.config.js
+```
+
+Landing page Vite config. It copies assets from root `assets/`.
+
+```text
+site/src/App.jsx
+```
+
+Single-page cinematic landing page with download CTA.
+
+```text
+site/src/styles.css
+```
+
+Landing page visual system, responsive layout, and hero animations.
 
 ## app/
 
-Frontend dashboard.
+Local dashboard.
 
 ```text
 app/src/main.jsx
@@ -78,7 +118,7 @@ React entry point and style imports.
 app/src/App.jsx
 ```
 
-Chooses which page to render based on the selected route.
+Chooses which dashboard page to render based on the selected route.
 
 ```text
 app/src/layouts/AppShell.jsx
@@ -115,12 +155,6 @@ app/src/styles/
 ```
 
 Split CSS files for theme, layout, sounds, routing, hotkeys, and shared utilities.
-
-```text
-app/public/
-```
-
-Place browser/site static files here, such as favicon and web app icons.
 
 ## native/
 
@@ -195,7 +229,7 @@ Stops local development ports and native companion leftovers.
 scripts/package-windows.ps1
 ```
 
-Builds the Windows portable package.
+Builds the dashboard, release companion, portable zip, generated icon, and MSI setup when WiX is installed.
 
 ## virtual-cable/
 
@@ -240,6 +274,12 @@ docs/RELEASE.md
 ```
 
 Release checklist and package notes.
+
+```text
+docs/VERCEL_DEPLOY.md
+```
+
+Vercel CLI deployment guide for the landing page.
 
 ```text
 docs/CHANGELOG.md
