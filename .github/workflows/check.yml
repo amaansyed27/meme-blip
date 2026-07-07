@@ -14,10 +14,12 @@ jobs:
         with:
           node-version: '22'
       - uses: dtolnay/rust-toolchain@stable
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: npm install
-      - name: Build web app
+      - name: Build dashboard app
         run: npm run build
+      - name: Build landing site
+        run: npm run site:build
       - name: Check native companion
         run: cargo check --manifest-path native/Cargo.toml
       - name: Build native companion
