@@ -2,8 +2,13 @@ export function slugBoardName(name) {
   return name.toLowerCase().trim().split(/\s+/).join('-');
 }
 
-export function deriveBoards(sounds) {
+export function deriveBoards(sounds, customBoards = [], favoriteBoards = []) {
   const counts = new Map();
+
+  for (const board of customBoards) {
+    const name = board || 'Meme Kit';
+    counts.set(name, 0);
+  }
 
   for (const sound of sounds) {
     const name = sound.board || 'Meme Kit';
@@ -15,7 +20,8 @@ export function deriveBoards(sounds) {
     name,
     sounds,
     mode: sounds === 1 ? '1 clip' : `${sounds} clips`,
-    accent: ['mint', 'blue', 'gold'][index % 3]
+    favorite: favoriteBoards.some((board) => board.toLowerCase() === name.toLowerCase()),
+    accent: ['stone', 'slate', 'sand'][index % 3]
   }));
 }
 
