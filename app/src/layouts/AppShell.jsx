@@ -31,7 +31,7 @@ export function AppShell({ children }) {
     <div className="app-shell">
       <aside className="sidebar">
         <button className="brand" onClick={() => setRoute('dashboard')}>
-          <img className="brand-mark-img" src="/brand/memeblip-icon-1024.png" alt="MemeBlip logo" />
+          <img className="brand-mark-img" src="/brand/memeblip-icon-1024-white.png" alt="MemeBlip logo" />
           <span><strong>MemeBlip</strong><small>Tray soundboard</small></span>
         </button>
         <nav className="sidebar-nav">
