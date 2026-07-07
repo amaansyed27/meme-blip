@@ -1,8 +1,32 @@
 {
   "name": "meme-blip",
   "version": "0.1.0",
+  "description": "Local-first Windows tray soundboard for Discord, games, calls, meetings, and virtual microphone routing through VB-CABLE.",
   "private": true,
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://meme-blip.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amaansyed27/meme-blip.git"
+  },
+  "keywords": [
+    "soundboard",
+    "windows-soundboard",
+    "tray-soundboard",
+    "discord-soundboard",
+    "valorant-soundboard",
+    "google-meet-soundboard",
+    "zoom-soundboard",
+    "virtual-microphone",
+    "mic-routing",
+    "vb-cable",
+    "audio-routing",
+    "hotkeys",
+    "rust",
+    "react",
+    "vite"
+  ],
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 48321",
     "build": "tsc && vite build",
