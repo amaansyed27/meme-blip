@@ -23,6 +23,18 @@ CONTRIBUTING.md
 Contribution rules and product principles.
 
 ```text
+SECURITY.md
+```
+
+Security policy and vulnerability reporting notes.
+
+```text
+SUPPORT.md
+```
+
+Support checklist for debugging user issues.
+
+```text
 LOGO_SETUP.md
 ```
 
@@ -216,6 +228,24 @@ docs/WORKING.md
 ```
 
 How clip playback, mic passthrough, soundboards, and hotkeys work.
+
+```text
+docs/INDEX.md
+```
+
+This file and folder map.
+
+```text
+docs/RELEASE.md
+```
+
+Release checklist and package notes.
+
+```text
+docs/CHANGELOG.md
+```
+
+Short project change history.
 
 ```text
 docs/CODE_REVIEW.md
