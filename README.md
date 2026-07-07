@@ -17,6 +17,10 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/amaansyed27/meme-blip/stargazers"><strong>⭐ Star this repo if MemeBlip is useful</strong></a>
+</p>
+
+<p align="center">
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-eadfca?labelColor=11100d" />
   <img alt="Local first" src="https://img.shields.io/badge/local--first-yes-eadfca?labelColor=11100d" />
   <img alt="Built with Rust and React" src="https://img.shields.io/badge/Rust%20%2B%20React-desktop-eadfca?labelColor=11100d" />
@@ -24,6 +28,8 @@
 </p>
 
 MemeBlip is a local-first tray soundboard for games, calls, and meetings. It lets you import short clips, organize them into soundboards, trigger them with hotkeys, and route clip audio plus optional mic passthrough into apps through VB-CABLE.
+
+If MemeBlip helps your stream, Discord calls, meetings, or game comms, star the repo so more people can find it: https://github.com/amaansyed27/meme-blip
 
 ## Discoverability tags
 
