@@ -28,12 +28,10 @@ const setup = [
 export function App() {
   const { scrollYProgress } = useScroll();
   const heroDrift = useTransform(scrollYProgress, [0, 0.7], [0, -72]);
-  const beamDrift = useTransform(scrollYProgress, [0, 1], ['-18%', '18%']);
 
   return (
     <main className="site-shell">
       <div className="page-grain" />
-      <motion.div className="signal-beam" style={{ x: beamDrift }} />
 
       <nav className="nav" aria-label="Main navigation">
         <a className="nav-brand" href="#top" aria-label="MemeBlip home">
