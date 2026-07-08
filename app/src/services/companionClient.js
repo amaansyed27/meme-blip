@@ -57,6 +57,7 @@ export const companionClient = {
   updateSound: (soundId, patch) => request(`/sounds/${soundId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteSound: (soundId) => request(`/sounds/${soundId}`, { method: 'DELETE' }),
   play: (soundId) => request(`/sounds/${soundId}/play`, { method: 'POST' }),
+  preview: (soundId) => request(`/sounds/${soundId}/preview`, { method: 'POST' }),
   stopAll: () => request('/sounds/stop-all', { method: 'POST' }),
   setOutputDevice: (deviceId) => request('/settings/output-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
   setMonitorDevice: (deviceId) => request('/settings/monitor-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
