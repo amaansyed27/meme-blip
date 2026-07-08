@@ -17,6 +17,7 @@ pub(crate) fn router() -> Router<SharedState> {
         .route("/sounds/import-url", post(sounds::import_sound_url))
         .route("/sounds/:id", patch(sounds::update_sound).delete(sounds::delete_sound))
         .route("/sounds/:id/play", post(sounds::play_sound))
+        .route("/sounds/:id/preview", post(sounds::preview_sound))
         .route("/sounds/:id/hotkey", post(sounds::assign_hotkey))
         .route("/sounds/stop-all", post(sounds::stop_all))
         .route("/boards", get(sounds::list_boards))
