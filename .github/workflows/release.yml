@@ -32,21 +32,22 @@ jobs:
         shell: powershell
         run: |
           if (!(Test-Path release\MemeBlip-Setup.msi)) { throw "release\MemeBlip-Setup.msi was not created" }
-          if (!(Test-Path release\MemeBlip-Windows.zip)) { throw "release\MemeBlip-Windows.zip was not created" }
 
-      - name: Upload package artifacts
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: memeblip-windows
-          path: |
-            release/MemeBlip-Setup.msi
-            release/MemeBlip-Windows.zip
+          name: memeblip-windows-installer
+          path: release/MemeBlip-Setup.msi
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            release/MemeBlip-Setup.msi
-            release/MemeBlip-Windows.zip
+          files: release/MemeBlip-Setup.msi
+          body: |
+            Install MemeBlip from the landing page:
+            https://memeblip.dawnlightlabs.com/
+
+            This release publishes the Windows MSI used by the landing-page download button.
+            VB-CABLE is not bundled or silently installed; MemeBlip will guide users through audio routing separately.
           generate_release_notes: true
