@@ -14,6 +14,7 @@ pub(crate) fn router() -> Router<SharedState> {
         .route("/system/open-vbcable", post(system::open_vb_cable_setup))
         .route("/sounds", get(sounds::list_sounds))
         .route("/sounds/import", post(sounds::import_sound))
+        .route("/sounds/import-url", post(sounds::import_sound_url))
         .route("/sounds/:id", patch(sounds::update_sound).delete(sounds::delete_sound))
         .route("/sounds/:id/play", post(sounds::play_sound))
         .route("/sounds/:id/hotkey", post(sounds::assign_hotkey))
