@@ -4,7 +4,7 @@ MemeBlip lets you play short audio clips into games, calls, and meetings without
 
 ## Basic idea
 
-Target apps such as Valorant, Discord, Google Meet, or Zoom need to hear MemeBlip as a microphone.
+Target apps such as Valorant, CS, Overwatch, Google Meet, or Zoom need to hear MemeBlip as a microphone.
 
 VB-CABLE provides that virtual microphone route:
 
@@ -34,7 +34,7 @@ Speaker: your normal headphones/speakers
 
 ## Clip playback
 
-When a clip is triggered:
+When a clip is triggered by a hotkey or routed action:
 
 ```text
 Imported audio file
@@ -51,7 +51,17 @@ Imported audio file
 -> headphones/speakers
 ```
 
-## Mic passthrough
+Library preview is separate from mic routing:
+
+```text
+Library play button
+-> local preview endpoint
+-> default Windows speaker/headphone output
+```
+
+This lets you test imported sounds without needing the virtual mic route to be configured.
+
+## Voice / mic passthrough
 
 If mic passthrough is enabled:
 
@@ -62,7 +72,54 @@ Physical microphone
 -> target app hears your voice through CABLE Output
 ```
 
+This is how MemeBlip keeps your real voice and meme clips in one microphone path.
+
 MemeBlip handles common format mismatches by converting microphone input to mono and resampling when needed.
+
+## MyInstants supplier
+
+The **Sounds → Get more** page lets users find sounds without leaving MemeBlip.
+
+Flow:
+
+```text
+Search/trending/recent/best
+-> preview sound in supplier page
+-> Add to MemeBlip
+-> local companion downloads the MP3
+-> sound is saved locally
+-> sound appears in the active board
+```
+
+MemeBlip uses the public MyInstants API wrapper from `abdipr/myinstants-api` through:
+
+```text
+https://myinstants-api.vercel.app
+```
+
+The supplier UI calls:
+
+```text
+/search?q=<query>
+/trending?q=us
+/recent
+/best?q=us
+```
+
+The native companion imports through:
+
+```text
+POST /sounds/import-url
+```
+
+For safety and reliability, the companion only accepts MyInstants media URLs from:
+
+```text
+https://www.myinstants.com/media/sounds/
+https://myinstants.com/media/sounds/
+```
+
+Remote sounds become local clips after import, so hotkeys do not depend on MyInstants being online later.
 
 ## Soundboards
 
@@ -100,6 +157,8 @@ Valorant push-to-talk flow:
 ```text
 Hold V -> press MemeBlip hotkey -> clip transmits -> release V
 ```
+
+For games with aggressive input handling, run the companion as Administrator if hotkeys do not fire in-game.
 
 ## Updates
 
