@@ -136,24 +136,18 @@ function New-WixUiBitmap($SourcePng, $DestinationBmp, [int]$Width, [int]$Height,
 
     if ($Variant -eq "banner") {
       $graphics.Clear([System.Drawing.Color]::FromArgb(244, 237, 223))
-      $logoSize = 42
-      $graphics.DrawImage($source, $Width - $logoSize - 18, 8, $logoSize, $logoSize)
-      $titleFont = New-Object System.Drawing.Font "Segoe UI", 15, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
-      $bodyFont = New-Object System.Drawing.Font "Segoe UI", 11, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
-      $titleBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(17, 16, 13))
-      $bodyBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(84, 76, 62))
-      $graphics.DrawString("MemeBlip", $titleFont, $titleBrush, 18, 10)
-      $graphics.DrawString("Windows tray soundboard", $bodyFont, $bodyBrush, 18, 31)
+      $logoSize = 34
+      $graphics.DrawImage($source, $Width - $logoSize - 18, 12, $logoSize, $logoSize)
     } else {
       $graphics.Clear([System.Drawing.Color]::FromArgb(7, 7, 6))
-      $logoSize = 118
-      $graphics.DrawImage($source, 44, 46, $logoSize, $logoSize)
-      $titleFont = New-Object System.Drawing.Font "Segoe UI", 30, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
-      $bodyFont = New-Object System.Drawing.Font "Segoe UI", 15, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
+      $logoSize = 110
+      $graphics.DrawImage($source, 42, 42, $logoSize, $logoSize)
+      $titleFont = New-Object System.Drawing.Font "Segoe UI", 28, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
+      $bodyFont = New-Object System.Drawing.Font "Segoe UI", 14, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
       $titleBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(244, 237, 223))
       $bodyBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(215, 204, 182))
-      $graphics.DrawString("MemeBlip", $titleFont, $titleBrush, 44, 178)
-      $graphics.DrawString("Hotkeys. Mic routing. Controlled chaos.", $bodyFont, $bodyBrush, 46, 218)
+      $graphics.DrawString("MemeBlip", $titleFont, $titleBrush, 42, 170)
+      $graphics.DrawString("Tray soundboard for calls, games, and meetings.", $bodyFont, $bodyBrush, 42, 208)
     }
 
     $bitmap.Save($DestinationBmp, [System.Drawing.Imaging.ImageFormat]::Bmp)
