@@ -38,6 +38,19 @@ export function createSoundSlice(set, get) {
         set({ error: error.message });
       }
     },
+    deleteBoard: async (name) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      try {
+        const settings = await companionClient.deleteBoard(trimmed);
+        const sounds = await companionClient.sounds();
+        set({ sounds });
+        applyBoardSettings(set, get, settings);
+      } catch (error) {
+        set({ error: error.message });
+        throw error;
+      }
+    },
     setFavoriteBoard: async (board, favorite) => {
       try {
         const settings = await companionClient.setFavoriteBoard(board, favorite);
