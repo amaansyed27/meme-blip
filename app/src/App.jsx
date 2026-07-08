@@ -4,6 +4,7 @@ import { AppShell } from './layouts/AppShell.jsx';
 import { AudioRouting } from './pages/AudioRouting.jsx';
 import { Dashboard } from './pages/Dashboard.jsx';
 import { Hotkeys } from './pages/Hotkeys.jsx';
+import { MyInstants } from './pages/MyInstants.jsx';
 import { Settings } from './pages/Settings.jsx';
 import { Soundboards } from './pages/Soundboards.jsx';
 import { Sounds } from './pages/Sounds.jsx';
@@ -17,7 +18,8 @@ const pages = {
   boards: Soundboards,
   hotkeys: Hotkeys,
   routing: AudioRouting,
-  settings: Settings
+  settings: Settings,
+  supplier: MyInstants
 };
 
 export default function App() {
