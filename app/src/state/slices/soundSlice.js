@@ -76,6 +76,23 @@ export function createSoundSlice(set, get) {
         set({ error: error.message });
       }
     },
+    importRemoteSound: async (remoteSound) => {
+      set({ error: null });
+      try {
+        const sound = await companionClient.importSoundUrl({
+          title: remoteSound.title,
+          mp3: remoteSound.mp3,
+          board: get().activeBoard || 'Meme Kit',
+          volume: 80
+        });
+        const sounds = [sound, ...get().sounds];
+        set({ sounds, boards: deriveBoards(sounds, get().customBoards, get().favoriteBoards) });
+        return sound;
+      } catch (error) {
+        set({ error: error.message });
+        throw error;
+      }
+    },
     updateSound: async (id, patch) => {
       try {
         const updated = await companionClient.updateSound(id, patch);
