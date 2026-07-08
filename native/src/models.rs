@@ -125,6 +125,15 @@ pub struct UpdateSoundRequest {
     pub color: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportSoundUrlRequest {
+    pub title: String,
+    pub mp3: String,
+    pub board: Option<String>,
+    pub volume: Option<u8>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HealthResponse {
