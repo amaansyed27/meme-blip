@@ -40,6 +40,7 @@ export const companionClient = {
   settings: () => request('/settings'),
   checkUpdate: () => request('/updates/check'),
   downloadUpdate: () => request('/updates/download', { method: 'POST' }),
+  openVbCableSetup: () => request('/system/open-vbcable', { method: 'POST' }),
   testRoute: () => request('/devices/test', { method: 'POST' }),
   importSound: ({ file, board, hotkey, volume }) => {
     const form = new FormData();
