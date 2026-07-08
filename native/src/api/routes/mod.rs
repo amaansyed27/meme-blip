@@ -11,6 +11,7 @@ pub(crate) fn router() -> Router<SharedState> {
     Router::new()
         .route("/health", get(system::health))
         .route("/driver/status", get(system::driver_status))
+        .route("/system/open-vbcable", post(system::open_vb_cable_setup))
         .route("/sounds", get(sounds::list_sounds))
         .route("/sounds/import", post(sounds::import_sound))
         .route("/sounds/:id", patch(sounds::update_sound).delete(sounds::delete_sound))
