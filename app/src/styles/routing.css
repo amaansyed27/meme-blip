@@ -6,6 +6,15 @@
 .device-card small { color: var(--soft); font-size: 10px; opacity: .75; }
 
 .routing-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.routing-cable-alert { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.routing-cable-alert > div:first-child { display: flex; align-items: flex-start; gap: 10px; }
+.routing-cable-alert strong { display: block; font-size: 13px; }
+.routing-cable-alert p { margin: 3px 0 0; max-width: 700px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.routing-cable-alert.ready { border-color: rgba(117,197,149,.26); }
+.routing-cable-alert.ready > div:first-child > svg { color: #8fd5a8; }
+.routing-cable-alert.missing { border-color: rgba(215,134,127,.3); background: rgba(215,134,127,.08); }
+.routing-cable-alert.missing > div:first-child > svg { color: var(--red); }
+.routing-cable-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
 .routing-status-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .routing-status-strip div { display: inline-flex; align-items: center; gap: 7px; min-height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); font-size: 12px; }
 .routing-compact-grid, .routing-compact-grid.routing-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: start; }
@@ -31,4 +40,6 @@
 
 @media (max-width: 1180px) {
   .routing-compact-grid, .routing-compact-grid.routing-three, .routing-grid { grid-template-columns: 1fr; }
+  .routing-cable-alert { align-items: flex-start; flex-direction: column; }
+  .routing-cable-actions { justify-content: flex-start; }
 }
