@@ -1,15 +1,7 @@
-import { MoreHorizontal, Pencil, Play, Upload } from 'lucide-react';
+import { Play, Upload } from 'lucide-react';
 import { MetricCard } from '../components/MetricCard.jsx';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
-
-const demoSounds = [
-  { id: 'demo-vine-boom', name: 'Vine Boom', hotkey: 'F1', board: 'Streamer Essentials' },
-  { id: 'demo-bruh', name: 'Bruh', hotkey: 'F2', board: 'Streamer Essentials' },
-  { id: 'demo-airhorn', name: 'Airhorn', hotkey: 'F3', board: 'Streamer Essentials' },
-  { id: 'demo-sad-trombone', name: 'Sad Trombone', hotkey: 'F4', board: 'Streamer Essentials' },
-  { id: 'demo-victory-horn', name: 'Victory Horn', hotkey: 'F5', board: 'Streamer Essentials' }
-];
 
 export function Dashboard() {
   const sounds = useMemeBlipStore((state) => state.sounds);
@@ -19,14 +11,7 @@ export function Dashboard() {
   const companionOnline = useMemeBlipStore((state) => state.companionOnline);
   const activeBoard = useMemeBlipStore((state) => state.activeBoard);
   const selectedBoard = boards.find((board) => board.name === activeBoard) || boards[0];
-  const selectedBoardName = selectedBoard?.name || 'Streamer Essentials';
   const selectedBoardSounds = selectedBoard ? sounds.filter((sound) => sound.board === selectedBoard.name) : [];
-  const showcaseSounds = selectedBoardSounds.length ? selectedBoardSounds.slice(0, 5) : demoSounds;
-
-  function playShowcaseSound(sound) {
-    if (String(sound.id).startsWith('demo-')) return;
-    playSound(sound.id);
-  }
 
   return (
     <>
@@ -48,34 +33,44 @@ export function Dashboard() {
         <div className="showcase-heading">
           <div>
             <p className="eyebrow">Currently selected board</p>
-            <div className="showcase-title-row">
-              <span className="board-emoji" aria-hidden="true">🎉</span>
-              <div>
-                <h2>{selectedBoardName}</h2>
-                <p>The go-to sounds for hype, laughs, and those perfect moments.</p>
+            {selectedBoard ? (
+              <div className="showcase-title-row">
+                <span className="board-emoji" aria-hidden="true">🎛️</span>
+                <div>
+                  <h2>{selectedBoard.name}</h2>
+                  <p>{selectedBoard.mode || 'Sounds linked to this board are available for playback and hotkeys.'}</p>
+                </div>
+                {selectedBoard.favorite ? <span className="active-board-pill">Favorite</span> : null}
               </div>
-              <span className="active-board-pill">Default</span>
-            </div>
-          </div>
-          <div className="showcase-actions">
-            <button className="subtle-button"><Pencil size={14} /> Edit board</button>
-            <button className="icon-button" aria-label="More board actions"><MoreHorizontal size={17} /></button>
+            ) : (
+              <div className="showcase-title-row">
+                <span className="board-emoji" aria-hidden="true">＋</span>
+                <div>
+                  <h2>No board selected</h2>
+                  <p>Create or import a soundboard to link clips and hotkeys.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="showcase-list">
-          {showcaseSounds.map((sound, index) => (
-            <article className="showcase-sound-row" key={sound.id || sound.name}>
-              <button className="sound-play" onClick={() => playShowcaseSound(sound)} aria-label={`Play ${sound.name}`}><Play size={13} fill="currentColor" /></button>
-              <strong>{sound.name}</strong>
-              <div className="fake-wave" aria-hidden="true">
-                {Array.from({ length: 26 }).map((_, waveIndex) => <span key={waveIndex} style={{ '--wave': (waveIndex + index) % 9 }} />)}
-              </div>
-              <kbd>{sound.hotkey || `F${index + 1}`}</kbd>
-              <button className="sound-delete" aria-label="More clip actions"><MoreHorizontal size={17} /></button>
-            </article>
-          ))}
-        </div>
+        {selectedBoardSounds.length ? (
+          <div className="showcase-list">
+            {selectedBoardSounds.slice(0, 8).map((sound) => (
+              <article className="showcase-sound-row" key={sound.id}>
+                <button className="sound-play" onClick={() => playSound(sound.id)} aria-label={`Play ${sound.name}`}><Play size={13} fill="currentColor" /></button>
+                <strong>{sound.name}</strong>
+                <span className="showcase-meta">Board: {sound.board || selectedBoard.name}</span>
+                <span className="showcase-meta">Volume: {sound.volume ?? 80}%</span>
+                <kbd>{sound.hotkey || 'No key'}</kbd>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state dashboard-empty">
+            {selectedBoard ? 'No clips on this board yet. Import audio while this board is selected.' : 'Create or import a soundboard to link hotkeys.'}
+          </div>
+        )}
       </section>
     </>
   );
