@@ -58,6 +58,18 @@ export function createSoundSlice(set, get) {
         set({ activeSoundId: null, error: error.message });
       }
     },
+    previewSound: async (id) => {
+      if (get().muted) return;
+      set({ activeSoundId: id, error: null });
+      try {
+        await companionClient.preview(id);
+        window.setTimeout(() => {
+          if (get().activeSoundId === id) set({ activeSoundId: null });
+        }, 900);
+      } catch (error) {
+        set({ activeSoundId: null, error: error.message });
+      }
+    },
     stopAll: async () => {
       set({ activeSoundId: null });
       try {
