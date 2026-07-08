@@ -1,11 +1,14 @@
+use anyhow::anyhow;
 use axum::{extract::State, http::HeaderMap, Json};
 
 use crate::models::{
-    AppSettings, CreateBoardRequest, SetActiveBoardRequest, SetFavoriteBoardRequest,
+    AppSettings, CreateBoardRequest, DeleteBoardRequest, SetActiveBoardRequest, SetFavoriteBoardRequest,
     SetInputDeviceRequest, SetMicPassthroughRequest, SetMonitorDeviceRequest, SetOutputDeviceRequest,
 };
 
 use super::super::{apply_mic_passthrough, auth::verify, ApiError, SharedState};
+
+const DEFAULT_BOARD: &str = "Meme Kit";
 
 pub(crate) async fn get_settings(
     State(state): State<SharedState>,
@@ -75,6 +78,35 @@ pub(crate) async fn create_board(
         settings.custom_boards.push(name.to_string());
     }
     settings.active_board = Some(name.to_string()).filter(|board| !board.is_empty());
+    Ok(Json(state.storage.set_settings(settings)?))
+}
+
+pub(crate) async fn delete_board(
+    State(state): State<SharedState>,
+    headers: HeaderMap,
+    Json(payload): Json<DeleteBoardRequest>,
+) -> Result<Json<AppSettings>, ApiError> {
+    verify(&headers, &state)?;
+    let board = payload.name.trim();
+    if board.is_empty() {
+        return Err(anyhow!("missing board name").into());
+    }
+    if board.eq_ignore_ascii_case(DEFAULT_BOARD) {
+        return Err(anyhow!("Meme Kit is the default board and cannot be deleted").into());
+    }
+
+    let mut settings = state.storage.settings();
+    settings.custom_boards.retain(|item| !item.eq_ignore_ascii_case(board));
+    settings.favorite_boards.retain(|item| !item.eq_ignore_ascii_case(board));
+    if settings.active_board.as_ref().is_some_and(|active| active.eq_ignore_ascii_case(board)) {
+        settings.active_board = None;
+    }
+
+    for mut sound in state.storage.sounds().into_iter().filter(|sound| sound.board.eq_ignore_ascii_case(board)) {
+        sound.board = DEFAULT_BOARD.to_string();
+        let _ = state.storage.update_sound(sound)?;
+    }
+
     Ok(Json(state.storage.set_settings(settings)?))
 }
 
