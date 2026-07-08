@@ -46,6 +46,43 @@ function Stop-MemeBlipProcesses {
   }
 }
 
+function Stop-MsiProcessesUsingPath($Path) {
+  $normalized = [System.IO.Path]::GetFullPath([string]$Path)
+  $leaf = [System.IO.Path]::GetFileName($normalized)
+  $escaped = $normalized.Replace('\', '\\')
+
+  Get-CimInstance Win32_Process -Filter "name = 'msiexec.exe'" -ErrorAction SilentlyContinue | ForEach-Object {
+    $commandLine = [string]$_.CommandLine
+    if (!$commandLine) { return }
+    if ($commandLine -like "*$normalized*" -or $commandLine -like "*$escaped*" -or $commandLine -like "*$leaf*") {
+      Write-Host "Stopping MSI process using ${leaf}: [$($_.ProcessId)]"
+      Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+  }
+}
+
+function Clear-ExistingMsi($Path) {
+  if (!(Test-Path $Path)) { return }
+
+  Stop-MsiProcessesUsingPath $Path
+  Start-Sleep -Milliseconds 350
+
+  for ($attempt = 1; $attempt -le 6; $attempt++) {
+    try {
+      Remove-Item $Path -Force -ErrorAction Stop
+      Write-Host "Removed previous MSI: $Path"
+      return
+    } catch {
+      if ($attempt -eq 6) {
+        throw "Could not replace $Path because it is still locked. Close every 'MemeBlip Setup' installer window and stop any msiexec.exe using it, then run npm run package:windows again. Original error: $($_.Exception.Message)"
+      }
+      Write-Host "Previous MSI is locked; retrying remove attempt $attempt/6..." -ForegroundColor Yellow
+      Stop-MsiProcessesUsingPath $Path
+      Start-Sleep -Milliseconds 700
+    }
+  }
+}
+
 function Escape-Xml($value) {
   return [System.Security.SecurityElement]::Escape([string]$value)
 }
@@ -381,6 +418,7 @@ $LicenseRtf = Join-Path $InstallerDir "License.rtf"
 New-LicenseRtf $LicenseRtf
 New-ProductWxs $ProductWxs $LicenseRtf $BannerBmpPath $DialogBmpPath
 
+Clear-ExistingMsi $MsiPath
 Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
 Invoke-Checked $light @("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-out", "$MsiPath", "$ProductWixObj")
 
