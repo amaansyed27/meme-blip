@@ -50,6 +50,10 @@ export const companionClient = {
     form.append('volume', String(volume ?? 80));
     return request('/sounds/import', { method: 'POST', body: form });
   },
+  importSoundUrl: ({ title, mp3, board, volume }) => request('/sounds/import-url', {
+    method: 'POST',
+    body: JSON.stringify({ title, mp3, board: board || 'Meme Kit', volume: volume ?? 80 })
+  }),
   updateSound: (soundId, patch) => request(`/sounds/${soundId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteSound: (soundId) => request(`/sounds/${soundId}`, { method: 'DELETE' }),
   play: (soundId) => request(`/sounds/${soundId}/play`, { method: 'POST' }),
