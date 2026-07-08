@@ -137,6 +137,17 @@ pub(crate) async fn play_sound(
     Ok(Json(sound))
 }
 
+pub(crate) async fn preview_sound(
+    State(state): State<SharedState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Result<Json<SoundClip>, ApiError> {
+    verify(&headers, &state)?;
+    let sound = state.storage.find_sound(&id).ok_or_else(|| anyhow!("sound not found"))?;
+    state.audio.play(&sound, None, None)?;
+    Ok(Json(sound))
+}
+
 pub(crate) async fn stop_all(
     State(state): State<SharedState>,
     headers: HeaderMap,
