@@ -12,6 +12,7 @@ $BannerBmpPath = Join-Path $InstallerDir "memeblip-banner.bmp"
 $DialogBmpPath = Join-Path $InstallerDir "memeblip-dialog.bmp"
 $MsiPath = Join-Path $ReleaseDir "MemeBlip-Setup.msi"
 $Version = "1.1.0"
+$VbCableUrl = "https://vb-audio.com/Cable/"
 
 function Invoke-Checked($FilePath, [string[]]$Arguments) {
   & $FilePath @Arguments
@@ -25,14 +26,14 @@ function Stop-MemeBlipProcesses {
   foreach ($port in $ports) {
     $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
     foreach ($connection in $connections) {
-      $pid = $connection.OwningProcess
-      if (!$pid -or $pid -eq 0) { continue }
+      $processId = $connection.OwningProcess
+      if (!$processId -or $processId -eq 0) { continue }
       try {
-        $process = Get-Process -Id $pid -ErrorAction Stop
-        Write-Host "Stopping MemeBlip process on port ${port}: $($process.ProcessName) [$pid]"
-        Stop-Process -Id $pid -Force
+        $process = Get-Process -Id $processId -ErrorAction Stop
+        Write-Host "Stopping MemeBlip process on port ${port}: $($process.ProcessName) [$processId]"
+        Stop-Process -Id $processId -Force
       } catch {
-        Write-Host "Could not stop process $pid on port ${port}: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "Could not stop process $processId on port ${port}: $($_.Exception.Message)" -ForegroundColor Yellow
       }
     }
   }
@@ -190,7 +191,11 @@ function New-WixUiBitmap($SourcePng, $DestinationBmp, [int]$Width, [int]$Height,
 function New-FileComponentXml($file, $indent) {
   $script:ComponentCounter++
   $componentId = "CMP{0:D5}" -f $script:ComponentCounter
-  $fileId = "FIL{0:D5}" -f $script:ComponentCounter
+  if ($file.Name -eq "MemeBlip.exe") {
+    $fileId = "MemeBlipExecutable"
+  } else {
+    $fileId = "FIL{0:D5}" -f $script:ComponentCounter
+  }
   [void]$script:ComponentRefs.Add(('      <ComponentRef Id="{0}" />' -f $componentId))
   $source = Escape-Xml $file.FullName
   return @"
@@ -231,7 +236,7 @@ MemeBlip v$Version\par
 \par
 MemeBlip is provided under the MIT License.\par
 \par
-For virtual microphone routing, MemeBlip works with VB-CABLE. VB-CABLE is a separate virtual audio driver and is not installed silently by this setup. Install VB-CABLE separately if you want to route MemeBlip clips into Google Meet, Valorant, Zoom, or other microphone-based apps.\par
+For virtual microphone routing, MemeBlip works with VB-CABLE. VB-CABLE is a separate virtual audio driver and is not installed silently by this setup. Finish installation, launch MemeBlip, and use the first-run audio setup screen to install/check VB-CABLE.\par
 }
 "@ | Set-Content -Path $OutputPath -Encoding ASCII
 }
@@ -266,11 +271,18 @@ function New-ProductWxs($OutputPath, $LicenseRtfPath, $BannerBmp, $DialogBmp) {
     $iconXml
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch MemeBlip and check VB-CABLE setup" />
+    <Property Id="WixShellExecTarget" Value="[#MemeBlipExecutable]" />
+    <CustomAction Id="LaunchMemeBlipAfterInstall" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
     <WixVariable Id="WixUILicenseRtf" Value="$escapedLicenseRtfPath" />
     <WixVariable Id="WixUIBannerBmp" Value="$escapedBannerBmp" />
     <WixVariable Id="WixUIDialogBmp" Value="$escapedDialogBmp" />
     <UIRef Id="WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchMemeBlipAfterInstall">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
 
     <Feature Id="DefaultFeature" Title="MemeBlip" Level="1">
       <ComponentGroupRef Id="MemeBlipFiles" />
@@ -291,6 +303,7 @@ $installTree
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="*">
         <Shortcut Id="ApplicationStartMenuShortcut" Name="MemeBlip" Description="MemeBlip tray soundboard" Target="[INSTALLFOLDER]MemeBlip.exe" WorkingDirectory="INSTALLFOLDER"$shortcutIconAttribute />
+        <Shortcut Id="VbCableSetupShortcut" Name="VB-CABLE Setup" Description="Open the VB-CABLE virtual audio driver setup page" Target="[INSTALLFOLDER]VB-CABLE Setup.url" WorkingDirectory="INSTALLFOLDER"$shortcutIconAttribute />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\MemeBlip" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
@@ -330,6 +343,11 @@ cd /d %~dp0
 start "MemeBlip" MemeBlip.exe
 "@ | Set-Content -Path (Join-Path $BundleDir "Launch MemeBlip.bat") -Encoding ASCII
 
+@"
+[InternetShortcut]
+URL=$VbCableUrl
+"@ | Set-Content -Path (Join-Path $BundleDir "VB-CABLE Setup.url") -Encoding ASCII
+
 if (Test-Path $BrandPng) {
   New-IcoFromPng -SourcePng $BrandPng -DestinationIco $IconPath
   New-WixUiBitmap -SourcePng $BrandPng -DestinationBmp $BannerBmpPath -Width 493 -Height 58 -Variant "banner"
@@ -364,7 +382,7 @@ New-LicenseRtf $LicenseRtf
 New-ProductWxs $ProductWxs $LicenseRtf $BannerBmpPath $DialogBmpPath
 
 Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
-Invoke-Checked $light @("-ext", "WixUIExtension", "-out", "$MsiPath", "$ProductWixObj")
+Invoke-Checked $light @("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-out", "$MsiPath", "$ProductWixObj")
 
 if (!(Test-Path $MsiPath)) {
   throw "MSI build finished but $MsiPath was not created."
