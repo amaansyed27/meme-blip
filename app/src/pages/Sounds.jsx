@@ -1,4 +1,4 @@
-import { Upload } from 'lucide-react';
+import { Sparkles, Upload } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { SoundCard } from '../components/SoundCard.jsx';
 import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
@@ -9,6 +9,7 @@ export function Sounds() {
   const activeBoard = useMemeBlipStore((state) => state.activeBoard);
   const setActiveBoard = useMemeBlipStore((state) => state.setActiveBoard);
   const importSound = useMemeBlipStore((state) => state.importSound);
+  const setRoute = useMemeBlipStore((state) => state.setRoute);
   const query = useMemeBlipStore((state) => state.query).toLowerCase();
 
   const filtered = sounds.filter((sound) => {
@@ -23,7 +24,12 @@ export function Sounds() {
         eyebrow="Library"
         title="Your clip library."
         description={activeBoard ? `Showing ${activeBoard}. Imported clips are added to this board.` : 'Import clips, rename them, assign boards, and tune playback.'}
-        action={<label className="primary-button file-button"><Upload size={18} /> Import clips<input type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && importSound(event.target.files[0])} /></label>}
+        action={(
+          <div className="sound-page-actions">
+            <button className="subtle-button" onClick={() => setRoute('supplier')}><Sparkles size={17} /> Get more</button>
+            <label className="primary-button file-button"><Upload size={18} /> Import clips<input type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && importSound(event.target.files[0])} /></label>
+          </div>
+        )}
       />
 
       <section className="toolbar-panel board-filter-bar">
