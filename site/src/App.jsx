@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Download, ExternalLink, Mic2, MonitorSpeaker, Play, Radio, ShieldCheck, Sparkles, Star, Zap } from 'lucide-react';
 
 const repoUrl = 'https://github.com/amaansyed27/meme-blip';
-const downloadUrl = import.meta.env.VITE_MEMEBLIP_DOWNLOAD_URL || 'https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi';
+const downloadUrl = import.meta.env.VITE_MEMEBLIP_DOWNLOAD_URL || 'https://github.com/amaansyed27/meme-blip/releases/download/v1.4.0/MemeBlip-Setup.msi';
 
 const clips = [
   ['Alt + 1', 'vine-boom', '00:02'],
