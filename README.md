@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://meme-blip.vercel.app/">Landing page</a>
+  <a href="https://memeblip.dawnlightlabs.com/">Landing page</a>
   ·
   <a href="https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi">Download Windows setup</a>
   ·
