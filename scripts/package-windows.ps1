@@ -11,7 +11,7 @@ $IconPath = Join-Path $ReleaseDir "memeblip-windows.ico"
 $BannerBmpPath = Join-Path $InstallerDir "memeblip-banner.bmp"
 $DialogBmpPath = Join-Path $InstallerDir "memeblip-dialog.bmp"
 $MsiPath = Join-Path $ReleaseDir "MemeBlip-Setup.msi"
-$Version = "1.1.1"
+$Version = "1.4.0"
 $VbCableUrl = "https://vb-audio.com/Cable/"
 
 function Invoke-Checked($FilePath, [string[]]$Arguments) {
