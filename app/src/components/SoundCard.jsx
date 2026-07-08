@@ -3,14 +3,14 @@ import { useMemeBlipStore } from '../state/useMemeBlipStore.js';
 
 export function SoundCard({ sound, editable = false }) {
   const activeSoundId = useMemeBlipStore((state) => state.activeSoundId);
-  const playSound = useMemeBlipStore((state) => state.playSound);
+  const previewSound = useMemeBlipStore((state) => state.previewSound);
   const updateSound = useMemeBlipStore((state) => state.updateSound);
   const deleteSound = useMemeBlipStore((state) => state.deleteSound);
   const isActive = activeSoundId === sound.id;
 
   return (
     <article className={isActive ? 'sound-card is-playing' : 'sound-card'}>
-      <button className="sound-play" onClick={() => playSound(sound.id)} aria-label={'Play ' + sound.name}>
+      <button className="sound-play" onClick={() => previewSound(sound.id)} aria-label={'Preview ' + sound.name}>
         <Play size={15} fill="currentColor" />
       </button>
 
