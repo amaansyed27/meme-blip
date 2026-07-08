@@ -9,9 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://memeblip.dawnlightlabs.com/">Landing page</a>
-  ·
-  <a href="https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi">Download Windows setup</a>
+  <a href="https://memeblip.dawnlightlabs.com/"><strong>Install from the landing page</strong></a>
   ·
   <a href="docs/WORKING.md">How it works</a>
 </p>
@@ -28,6 +26,8 @@
 </p>
 
 MemeBlip is a local-first tray soundboard for games, calls, and meetings. It lets you import short clips, organize them into soundboards, trigger them with hotkeys, and route clip audio plus optional mic passthrough into apps through VB-CABLE.
+
+Install MemeBlip from the landing page only: https://memeblip.dawnlightlabs.com/
 
 If MemeBlip helps your stream, Discord calls, meetings, or game comms, star the repo so more people can find it: https://github.com/amaansyed27/meme-blip
 
@@ -177,17 +177,17 @@ Package Windows build:
 npm run package:windows
 ```
 
-This creates:
+This creates local build outputs:
 
 ```text
 release/MemeBlip-Windows.zip
 release/MemeBlip-Setup.msi
 ```
 
-The landing page download button points to:
+Public installs should go through:
 
 ```text
-https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi
+https://memeblip.dawnlightlabs.com/
 ```
 
 ## Documentation
