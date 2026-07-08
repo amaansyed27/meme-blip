@@ -9,11 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://meme-blip.vercel.app/">Landing page</a>
+  <a href="https://memeblip.dawnlightlabs.com/">Landing page</a>
   ·
   <a href="https://github.com/amaansyed27/meme-blip/releases/latest/download/MemeBlip-Setup.msi">Download Windows setup</a>
   ·
   <a href="docs/WORKING.md">How it works</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/amaansyed27/meme-blip/stargazers"><strong>⭐ Star this repo if MemeBlip is useful</strong></a>
 </p>
 
 <p align="center">
@@ -24,6 +28,8 @@
 </p>
 
 MemeBlip is a local-first tray soundboard for games, calls, and meetings. It lets you import short clips, organize them into soundboards, trigger them with hotkeys, and route clip audio plus optional mic passthrough into apps through VB-CABLE.
+
+If MemeBlip helps your stream, Discord calls, meetings, or game comms, star the repo so more people can find it: https://github.com/amaansyed27/meme-blip
 
 ## Discoverability tags
 
