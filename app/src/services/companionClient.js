@@ -64,6 +64,7 @@ export const companionClient = {
   setInputDevice: (deviceId) => request('/settings/input-device', { method: 'POST', body: JSON.stringify({ deviceId }) }),
   setActiveBoard: (board) => request('/settings/active-board', { method: 'POST', body: JSON.stringify({ board }) }),
   createBoard: (name) => request('/settings/boards', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteBoard: (name) => request('/settings/boards/delete', { method: 'POST', body: JSON.stringify({ name }) }),
   setFavoriteBoard: (board, favorite) => request('/settings/favorite-board', { method: 'POST', body: JSON.stringify({ board, favorite }) }),
   setMicPassthrough: (enabled) => request('/settings/mic-passthrough', { method: 'POST', body: JSON.stringify({ enabled }) }),
   assignHotkey: (soundId, hotkey) => request(`/sounds/${soundId}/hotkey`, { method: 'POST', body: JSON.stringify({ hotkey }) })
