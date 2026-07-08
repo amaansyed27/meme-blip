@@ -20,6 +20,31 @@ function Invoke-Checked($FilePath, [string[]]$Arguments) {
   }
 }
 
+function Stop-MemeBlipProcesses {
+  $ports = @(48322, 48321)
+  foreach ($port in $ports) {
+    $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+    foreach ($connection in $connections) {
+      $pid = $connection.OwningProcess
+      if (!$pid -or $pid -eq 0) { continue }
+      try {
+        $process = Get-Process -Id $pid -ErrorAction Stop
+        Write-Host "Stopping MemeBlip process on port ${port}: $($process.ProcessName) [$pid]"
+        Stop-Process -Id $pid -Force
+      } catch {
+        Write-Host "Could not stop process $pid on port ${port}: $($_.Exception.Message)" -ForegroundColor Yellow
+      }
+    }
+  }
+
+  @("MemeBlip", "meme-blip-native") | ForEach-Object {
+    Get-Process -Name $_ -ErrorAction SilentlyContinue | ForEach-Object {
+      Write-Host "Stopping running MemeBlip process: $($_.ProcessName) [$($_.Id)]"
+      Stop-Process -Id $_.Id -Force
+    }
+  }
+}
+
 function Escape-Xml($value) {
   return [System.Security.SecurityElement]::Escape([string]$value)
 }
@@ -280,6 +305,8 @@ $componentRefsText
 }
 
 Set-Location $Root
+
+Stop-MemeBlipProcesses
 
 npm install
 if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
