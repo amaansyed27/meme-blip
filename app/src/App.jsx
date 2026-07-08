@@ -10,8 +10,6 @@ import { Sounds } from './pages/Sounds.jsx';
 import { useMemeBlipStore } from './state/useMemeBlipStore.js';
 import { getVbCableStatus, VB_CABLE_DOWNLOAD_URL } from './utils/vbCable.js';
 
-const VB_CABLE_DISMISS_KEY = 'memeblip:vbcable-setup-dismissed';
-
 const pages = {
   dashboard: Dashboard,
   sounds: Sounds,
@@ -30,7 +28,7 @@ export default function App() {
   const refreshDevices = useMemeBlipStore((state) => state.refreshDevices);
   const setRoute = useMemeBlipStore((state) => state.setRoute);
   const Page = pages[route] || Dashboard;
-  const [cableGateDismissed, setCableGateDismissed] = React.useState(() => localStorage.getItem(VB_CABLE_DISMISS_KEY) === 'true');
+  const [cableGateDismissed, setCableGateDismissed] = React.useState(false);
   const [checkingCable, setCheckingCable] = React.useState(false);
   const cableStatus = getVbCableStatus(devices, inputDevices);
   const shouldShowCableGate = !loading && !cableStatus.ready && !cableGateDismissed;
@@ -38,6 +36,11 @@ export default function App() {
   React.useEffect(() => {
     initialize();
   }, [initialize]);
+
+  React.useEffect(() => {
+    if (!cableStatus.ready) return;
+    setCableGateDismissed(false);
+  }, [cableStatus.ready]);
 
   async function checkCableAgain() {
     setCheckingCable(true);
@@ -49,7 +52,6 @@ export default function App() {
   }
 
   function continueLimitedMode() {
-    localStorage.setItem(VB_CABLE_DISMISS_KEY, 'true');
     setCableGateDismissed(true);
     setRoute('routing');
   }
@@ -98,7 +100,7 @@ function VbCableSetupGate({ cableStatus, checkingCable, onCheckAgain, onContinue
         </div>
 
         <p className="setup-gate-note">
-          VB-CABLE is a separate virtual audio driver. MemeBlip does not install it silently because Windows may require admin approval and a reboot.
+          VB-CABLE is a separate virtual audio driver. MemeBlip does not install it silently because Windows may require admin approval and a reboot. Limited mode only hides this screen for the current app session.
         </p>
       </section>
     </div>
