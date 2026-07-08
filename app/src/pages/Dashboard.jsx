@@ -13,6 +13,10 @@ function getRouteName({ mixerStatus, devices, selectedDeviceId }) {
   );
 }
 
+function getKeyMap(sound) {
+  return sound.key || sound.hotkey || sound.shortcut || sound.binding || '';
+}
+
 export function Dashboard() {
   const sounds = useMemeBlipStore((state) => state.sounds);
   const boards = useMemeBlipStore((state) => state.boards);
@@ -52,7 +56,7 @@ export function Dashboard() {
                 <span className="board-emoji" aria-hidden="true">🎛️</span>
                 <div>
                   <h2>{selectedBoard.name}</h2>
-                  <p>Preview clips from this board and check the current key map.</p>
+                  <p>Basic preview of this board’s sounds and key maps.</p>
                 </div>
                 {selectedBoard.favorite ? <span className="active-board-pill">Favorite</span> : null}
               </div>
@@ -74,13 +78,16 @@ export function Dashboard() {
               <span>Sound</span>
               <span>Key map</span>
             </div>
-            {selectedBoardSounds.slice(0, 8).map((sound) => (
-              <article className="showcase-sound-row" key={sound.id}>
-                <button className="sound-play" onClick={() => previewSound(sound.id)} aria-label={`Preview ${sound.name}`}><Play size={13} fill="currentColor" /></button>
-                <strong>{sound.name}</strong>
-                <span className={sound.hotkey ? 'key-map assigned' : 'key-map empty'}><Keyboard size={13} /> {sound.hotkey || 'No key assigned'}</span>
-              </article>
-            ))}
+            {selectedBoardSounds.slice(0, 8).map((sound) => {
+              const keyMap = getKeyMap(sound);
+              return (
+                <article className="showcase-sound-row" key={sound.id}>
+                  <button className="sound-play" onClick={() => previewSound(sound.id)} aria-label={`Preview ${sound.name}`}><Play size={13} fill="currentColor" /></button>
+                  <strong>{sound.name}</strong>
+                  <span className={keyMap ? 'key-map assigned' : 'key-map empty'}><Keyboard size={13} /> {keyMap || 'No key assigned'}</span>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="empty-state dashboard-empty">
