@@ -10,12 +10,26 @@ const filters = [
   { id: 'best', label: 'Best' }
 ];
 
+const famousSoundPrompts = [
+  'vine boom',
+  'bruh sound effect',
+  'among us role reveal',
+  'anime wow',
+  'metal pipe falling',
+  'taco bell bong',
+  'windows error',
+  'dramatic chipmunk',
+  'sad trombone',
+  'fart reverb'
+];
+
 export function MyInstants() {
   const importRemoteSound = useMemeBlipStore((state) => state.importRemoteSound);
   const setRoute = useMemeBlipStore((state) => state.setRoute);
   const activeBoard = useMemeBlipStore((state) => state.activeBoard);
   const [mode, setMode] = React.useState('trending');
-  const [query, setQuery] = React.useState('vine boom');
+  const [query, setQuery] = React.useState('');
+  const [animatedPlaceholder, setAnimatedPlaceholder] = React.useState('');
   const [items, setItems] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState('');
@@ -45,8 +59,39 @@ export function MyInstants() {
   }, [mode, query]);
 
   React.useEffect(() => {
-    loadSounds('trending', query);
+    loadSounds('trending', '');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    let promptIndex = 0;
+    let letterIndex = 0;
+    let deleting = false;
+    let timeoutId;
+
+    function tick() {
+      const current = famousSoundPrompts[promptIndex];
+      if (!deleting) {
+        letterIndex += 1;
+        setAnimatedPlaceholder(current.slice(0, letterIndex));
+        if (letterIndex >= current.length) {
+          deleting = true;
+          timeoutId = window.setTimeout(tick, 1100);
+          return;
+        }
+      } else {
+        letterIndex -= 1;
+        setAnimatedPlaceholder(current.slice(0, Math.max(0, letterIndex)));
+        if (letterIndex <= 0) {
+          deleting = false;
+          promptIndex = (promptIndex + 1) % famousSoundPrompts.length;
+        }
+      }
+      timeoutId = window.setTimeout(tick, deleting ? 34 : 58);
+    }
+
+    tick();
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   async function runSearch(event) {
     event.preventDefault();
@@ -85,7 +130,7 @@ export function MyInstants() {
         <form className="supplier-search" onSubmit={runSearch}>
           <label>
             <Search size={16} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search memes, sounds, effects" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Try “${animatedPlaceholder || 'meme sound'}”`} />
           </label>
           <button className="primary-button" type="submit"><Search size={15} /> Search</button>
         </form>
