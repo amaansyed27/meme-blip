@@ -8,8 +8,10 @@ $NativeExe = Join-Path $Root "native\target\release\meme-blip-native.exe"
 $DashboardDist = Join-Path $Root "dist"
 $BrandPng = Join-Path $Root "assets\brand\memeblip-icon-1024.png"
 $IconPath = Join-Path $ReleaseDir "memeblip-windows.ico"
+$BannerBmpPath = Join-Path $InstallerDir "memeblip-banner.bmp"
+$DialogBmpPath = Join-Path $InstallerDir "memeblip-dialog.bmp"
 $MsiPath = Join-Path $ReleaseDir "MemeBlip-Setup.msi"
-$Version = "0.1.0"
+$Version = "1.1.0"
 
 function Invoke-Checked($FilePath, [string[]]$Arguments) {
   & $FilePath @Arguments
@@ -115,6 +117,57 @@ function New-IcoFromPng($SourcePng, $DestinationIco) {
   }
 }
 
+function New-WixUiBitmap($SourcePng, $DestinationBmp, [int]$Width, [int]$Height, [string]$Variant) {
+  Add-Type -AssemblyName System.Drawing
+  $source = [System.Drawing.Image]::FromFile($SourcePng)
+  $bitmap = $null
+  $graphics = $null
+  $titleFont = $null
+  $bodyFont = $null
+  $titleBrush = $null
+  $bodyBrush = $null
+
+  try {
+    $bitmap = New-Object System.Drawing.Bitmap $Width, $Height, ([System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
+
+    if ($Variant -eq "banner") {
+      $graphics.Clear([System.Drawing.Color]::FromArgb(244, 237, 223))
+      $logoSize = 42
+      $graphics.DrawImage($source, $Width - $logoSize - 18, 8, $logoSize, $logoSize)
+      $titleFont = New-Object System.Drawing.Font "Segoe UI", 15, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
+      $bodyFont = New-Object System.Drawing.Font "Segoe UI", 11, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
+      $titleBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(17, 16, 13))
+      $bodyBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(84, 76, 62))
+      $graphics.DrawString("MemeBlip", $titleFont, $titleBrush, 18, 10)
+      $graphics.DrawString("Windows tray soundboard", $bodyFont, $bodyBrush, 18, 31)
+    } else {
+      $graphics.Clear([System.Drawing.Color]::FromArgb(7, 7, 6))
+      $logoSize = 118
+      $graphics.DrawImage($source, 44, 46, $logoSize, $logoSize)
+      $titleFont = New-Object System.Drawing.Font "Segoe UI", 30, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel)
+      $bodyFont = New-Object System.Drawing.Font "Segoe UI", 15, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
+      $titleBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(244, 237, 223))
+      $bodyBrush = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(215, 204, 182))
+      $graphics.DrawString("MemeBlip", $titleFont, $titleBrush, 44, 178)
+      $graphics.DrawString("Hotkeys. Mic routing. Controlled chaos.", $bodyFont, $bodyBrush, 46, 218)
+    }
+
+    $bitmap.Save($DestinationBmp, [System.Drawing.Imaging.ImageFormat]::Bmp)
+  } finally {
+    if ($bodyBrush) { $bodyBrush.Dispose() }
+    if ($titleBrush) { $titleBrush.Dispose() }
+    if ($bodyFont) { $bodyFont.Dispose() }
+    if ($titleFont) { $titleFont.Dispose() }
+    if ($graphics) { $graphics.Dispose() }
+    if ($bitmap) { $bitmap.Dispose() }
+    $source.Dispose()
+  }
+}
+
 function New-FileComponentXml($file, $indent) {
   $script:ComponentCounter++
   $componentId = "CMP{0:D5}" -f $script:ComponentCounter
@@ -155,7 +208,7 @@ function New-LicenseRtf($OutputPath) {
 {\rtf1\ansi\deff0
 {\fonttbl{\f0 Segoe UI;}}
 \f0\fs20
-MemeBlip\par
+MemeBlip v$Version\par
 \par
 MemeBlip is provided under the MIT License.\par
 \par
@@ -164,7 +217,7 @@ For virtual microphone routing, MemeBlip works with VB-CABLE. VB-CABLE is a sepa
 "@ | Set-Content -Path $OutputPath -Encoding ASCII
 }
 
-function New-ProductWxs($OutputPath, $LicenseRtfPath) {
+function New-ProductWxs($OutputPath, $LicenseRtfPath, $BannerBmp, $DialogBmp) {
   $script:ComponentCounter = 0
   $script:DirectoryCounter = 0
   $script:ComponentRefs = New-Object System.Collections.Generic.List[string]
@@ -181,11 +234,13 @@ function New-ProductWxs($OutputPath, $LicenseRtfPath) {
   }
 
   $escapedLicenseRtfPath = Escape-Xml $LicenseRtfPath
+  $escapedBannerBmp = Escape-Xml $BannerBmp
+  $escapedDialogBmp = Escape-Xml $DialogBmp
 
 @"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="MemeBlip" Language="1033" Version="$Version" Manufacturer="Amaan Syed" UpgradeCode="B4E22F46-54D8-4629-8B17-94E5D802DC9D">
+  <Product Id="*" Name="MemeBlip" Language="1033" Version="$Version" Manufacturer="Dawnlight Labs" UpgradeCode="B4E22F46-54D8-4629-8B17-94E5D802DC9D">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of MemeBlip is already installed." />
     <MediaTemplate EmbedCab="yes" />
@@ -193,6 +248,8 @@ function New-ProductWxs($OutputPath, $LicenseRtfPath) {
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$escapedLicenseRtfPath" />
+    <WixVariable Id="WixUIBannerBmp" Value="$escapedBannerBmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$escapedDialogBmp" />
     <UIRef Id="WixUI_InstallDir" />
     <UIRef Id="WixUI_ErrorProgressText" />
 
@@ -254,9 +311,11 @@ start "MemeBlip" MemeBlip.exe
 
 if (Test-Path $BrandPng) {
   New-IcoFromPng -SourcePng $BrandPng -DestinationIco $IconPath
+  New-WixUiBitmap -SourcePng $BrandPng -DestinationBmp $BannerBmpPath -Width 493 -Height 58 -Variant "banner"
+  New-WixUiBitmap -SourcePng $BrandPng -DestinationBmp $DialogBmpPath -Width 493 -Height 312 -Variant "dialog"
   Copy-Item $IconPath (Join-Path $BundleDir "MemeBlip.ico") -Force
 } else {
-  Write-Warning "Brand PNG not found at $BrandPng. MSI will be built without a product icon."
+  throw "Brand PNG not found at $BrandPng. Cannot build a branded installer."
 }
 
 $ZipPath = Join-Path $ReleaseDir "MemeBlip-Windows.zip"
@@ -281,7 +340,7 @@ $ProductWixObj = Join-Path $InstallerDir "Product.wixobj"
 $LicenseRtf = Join-Path $InstallerDir "License.rtf"
 
 New-LicenseRtf $LicenseRtf
-New-ProductWxs $ProductWxs $LicenseRtf
+New-ProductWxs $ProductWxs $LicenseRtf $BannerBmpPath $DialogBmpPath
 
 Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
 Invoke-Checked $light @("-ext", "WixUIExtension", "-out", "$MsiPath", "$ProductWixObj")
