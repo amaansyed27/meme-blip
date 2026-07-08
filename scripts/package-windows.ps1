@@ -150,7 +150,21 @@ $indent</Directory>
   return ($chunks -join "`n")
 }
 
-function New-ProductWxs($OutputPath) {
+function New-LicenseRtf($OutputPath) {
+  @"
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Segoe UI;}}
+\f0\fs20
+MemeBlip\par
+\par
+MemeBlip is provided under the MIT License.\par
+\par
+For virtual microphone routing, MemeBlip works with VB-CABLE. VB-CABLE is a separate virtual audio driver and is not installed silently by this setup. Install VB-CABLE separately if you want to route MemeBlip clips into Google Meet, Valorant, Zoom, or other microphone-based apps.\par
+}
+"@ | Set-Content -Path $OutputPath -Encoding ASCII
+}
+
+function New-ProductWxs($OutputPath, $LicenseRtfPath) {
   $script:ComponentCounter = 0
   $script:DirectoryCounter = 0
   $script:ComponentRefs = New-Object System.Collections.Generic.List[string]
@@ -166,6 +180,8 @@ function New-ProductWxs($OutputPath) {
     $shortcutIconAttribute = ' Icon="MemeBlipIcon.ico"'
   }
 
+  $escapedLicenseRtfPath = Escape-Xml $LicenseRtfPath
+
 @"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -174,6 +190,11 @@ function New-ProductWxs($OutputPath) {
     <MajorUpgrade DowngradeErrorMessage="A newer version of MemeBlip is already installed." />
     <MediaTemplate EmbedCab="yes" />
     $iconXml
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$escapedLicenseRtfPath" />
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
 
     <Feature Id="DefaultFeature" Title="MemeBlip" Level="1">
       <ComponentGroupRef Id="MemeBlipFiles" />
@@ -257,11 +278,13 @@ Write-Host "  light:  $light"
 
 $ProductWxs = Join-Path $InstallerDir "Product.wxs"
 $ProductWixObj = Join-Path $InstallerDir "Product.wixobj"
+$LicenseRtf = Join-Path $InstallerDir "License.rtf"
 
-New-ProductWxs $ProductWxs
+New-LicenseRtf $LicenseRtf
+New-ProductWxs $ProductWxs $LicenseRtf
 
 Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
-Invoke-Checked $light @("-out", "$MsiPath", "$ProductWixObj")
+Invoke-Checked $light @("-ext", "WixUIExtension", "-out", "$MsiPath", "$ProductWixObj")
 
 if (!(Test-Path $MsiPath)) {
   throw "MSI build finished but $MsiPath was not created."
