@@ -1,11 +1,11 @@
 {
   "name": "meme-blip",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Local-first Windows tray soundboard for Discord, games, calls, meetings, and virtual microphone routing through VB-CABLE.",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "homepage": "https://meme-blip.vercel.app/",
+  "homepage": "https://memeblip.dawnlightlabs.com/",
   "repository": {
     "type": "git",
     "url": "https://github.com/amaansyed27/meme-blip.git"
