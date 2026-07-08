@@ -87,6 +87,12 @@ pub struct CreateBoardRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DeleteBoardRequest {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetFavoriteBoardRequest {
     pub board: String,
     pub favorite: bool,
