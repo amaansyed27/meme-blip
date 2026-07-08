@@ -16,7 +16,7 @@ export function AppShell({ children }) {
   const initialize = useMemeBlipStore((state) => state.initialize);
   const companionOnline = useMemeBlipStore((state) => state.companionOnline);
   const error = useMemeBlipStore((state) => state.error);
-  const [theme, setTheme] = React.useState(() => localStorage.getItem('memeblip-theme') || 'dark');
+  const [theme, setTheme] = React.useState(() => localStorage.getItem('memeblip-theme') || 'light');
 
   React.useEffect(() => {
     document.body.classList.toggle('theme-light', theme === 'light');
@@ -31,7 +31,7 @@ export function AppShell({ children }) {
     <div className="app-shell">
       <aside className="sidebar">
         <button className="brand" onClick={() => setRoute('dashboard')}>
-          <img className="brand-mark-img" src="/brand/memeblip-icon-1024-white.png" alt="MemeBlip logo" />
+          <img className="brand-mark-img" src="/brand/memeblip-icon-1024.png" alt="MemeBlip logo" />
           <span><strong>MemeBlip</strong><small>Tray soundboard</small></span>
         </button>
         <nav className="sidebar-nav">
@@ -50,8 +50,9 @@ export function AppShell({ children }) {
         <div className={companionOnline ? 'sidebar-card' : 'sidebar-card offline'}>
           <p>Companion</p>
           <strong><CircleDot size={13} /> {companionOnline ? 'Online' : 'Offline'}</strong>
-          <span>{companionOnline ? 'Hotkeys and audio API are active.' : 'Start the native companion to enable playback.'}</span>
+          <span>{companionOnline ? 'Local playback API connected.' : 'Start the native companion to enable playback.'}</span>
           {error ? <small>{error}</small> : null}
+          <button className="sidebar-card-button">View details</button>
         </div>
       </aside>
 
