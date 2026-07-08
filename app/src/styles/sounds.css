@@ -53,9 +53,22 @@
 .showcase-list { display: grid; gap: 7px; }
 .dashboard-empty { margin-top: 12px; }
 
+.showcase-column-labels {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 170px;
+  gap: 12px;
+  padding: 0 10px 2px 56px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+
+.showcase-column-labels span:last-child { text-align: right; }
+
 .showcase-sound-row {
   display: grid;
-  grid-template-columns: 34px minmax(160px, 1.2fr) minmax(160px, .9fr) minmax(96px, .55fr) 74px;
+  grid-template-columns: 34px minmax(220px, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-height: 54px;
@@ -73,8 +86,9 @@
 }
 
 .showcase-sound-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.showcase-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
-.showcase-sound-row kbd { justify-self: end; min-width: 62px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; text-align: center; font-size: 11px; font-weight: 800; }
+.key-map { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); background: var(--panel); font-size: 11px; font-weight: 800; white-space: nowrap; }
+.key-map.assigned { color: var(--accent-strong); background: var(--accent-soft); }
+.key-map.empty { color: var(--muted); }
 
 .sound-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 8px; }
 .sound-grid.compact, .sound-table { display: grid; grid-template-columns: 1fr; gap: 1px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--line); }
@@ -157,5 +171,6 @@ body.theme-light .delete-board-pill { color: #8a2929; background: #f1ded9; }
   .board-grid, .selected-board-grid, .supplier-panel, .supplier-search { grid-template-columns: 1fr; }
   .create-board-row { grid-template-columns: 1fr; }
   .supplier-filters, .supplier-card-actions { justify-content: flex-start; }
-  .showcase-sound-row { grid-template-columns: 34px minmax(140px, 1fr) minmax(130px, .8fr) minmax(80px, .5fr) 68px; }
+  .showcase-sound-row { grid-template-columns: 34px minmax(140px, 1fr) auto; }
+  .showcase-column-labels { grid-template-columns: minmax(140px, 1fr) 150px; }
 }
