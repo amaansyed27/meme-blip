@@ -11,7 +11,7 @@ $IconPath = Join-Path $ReleaseDir "memeblip-windows.ico"
 $BannerBmpPath = Join-Path $InstallerDir "memeblip-banner.bmp"
 $DialogBmpPath = Join-Path $InstallerDir "memeblip-dialog.bmp"
 $MsiPath = Join-Path $ReleaseDir "MemeBlip-Setup.msi"
-$Version = "1.1.0"
+$Version = "1.1.1"
 $VbCableUrl = "https://vb-audio.com/Cable/"
 
 function Invoke-Checked($FilePath, [string[]]$Arguments) {
@@ -378,52 +378,33 @@ Copy-Item $DashboardDist (Join-Path $BundleDir "dist") -Recurse -Force
 @echo off
 cd /d %~dp0
 start "MemeBlip" MemeBlip.exe
-"@ | Set-Content -Path (Join-Path $BundleDir "Launch MemeBlip.bat") -Encoding ASCII
+"@ | Set-Content -Path (Join-Path $BundleDir "Start MemeBlip.bat") -Encoding ASCII
 
 @"
 [InternetShortcut]
 URL=$VbCableUrl
 "@ | Set-Content -Path (Join-Path $BundleDir "VB-CABLE Setup.url") -Encoding ASCII
 
-if (Test-Path $BrandPng) {
-  New-IcoFromPng -SourcePng $BrandPng -DestinationIco $IconPath
-  New-WixUiBitmap -SourcePng $BrandPng -DestinationBmp $BannerBmpPath -Width 493 -Height 58 -Variant "banner"
-  New-WixUiBitmap -SourcePng $BrandPng -DestinationBmp $DialogBmpPath -Width 493 -Height 312 -Variant "dialog"
-  Copy-Item $IconPath (Join-Path $BundleDir "MemeBlip.ico") -Force
-} else {
-  throw "Brand PNG not found at $BrandPng. Cannot build a branded installer."
-}
-
-$ZipPath = Join-Path $ReleaseDir "MemeBlip-Windows.zip"
-if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
-Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $ZipPath -Force
-Write-Host "Packaged portable bundle to $ZipPath"
+if (!(Test-Path $BrandPng)) { throw "Missing brand PNG at $BrandPng" }
+New-IcoFromPng $BrandPng $IconPath
+New-WixUiBitmap $BrandPng $BannerBmpPath 493 58 "banner"
+New-WixUiBitmap $BrandPng $DialogBmpPath 493 312 "dialog"
+$LicenseRtfPath = Join-Path $InstallerDir "license.rtf"
+New-LicenseRtf $LicenseRtfPath
+$WxsPath = Join-Path $InstallerDir "Product.wxs"
+New-ProductWxs $WxsPath $LicenseRtfPath $BannerBmpPath $DialogBmpPath
 
 $candle = Get-ToolPath "candle.exe"
 $light = Get-ToolPath "light.exe"
-
 if (!$candle -or !$light) {
-  Write-Warning "WiX Toolset was not found. Portable zip is ready, but MSI was skipped. Install WiX Toolset v3.11 or newer to build MemeBlip-Setup.msi."
+  Write-Host "WiX Toolset was not found. ZIP bundle is ready at $BundleDir" -ForegroundColor Yellow
+  Write-Host "Install WiX Toolset v3 to build the MSI." -ForegroundColor Yellow
   exit 0
 }
 
-Write-Host "Using WiX tools:"
-Write-Host "  candle: $candle"
-Write-Host "  light:  $light"
-
-$ProductWxs = Join-Path $InstallerDir "Product.wxs"
-$ProductWixObj = Join-Path $InstallerDir "Product.wixobj"
-$LicenseRtf = Join-Path $InstallerDir "License.rtf"
-
-New-LicenseRtf $LicenseRtf
-New-ProductWxs $ProductWxs $LicenseRtf $BannerBmpPath $DialogBmpPath
-
 Clear-ExistingMsi $MsiPath
-Invoke-Checked $candle @("-out", "$ProductWixObj", "$ProductWxs")
-Invoke-Checked $light @("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-out", "$MsiPath", "$ProductWixObj")
-
-if (!(Test-Path $MsiPath)) {
-  throw "MSI build finished but $MsiPath was not created."
-}
-
-Write-Host "Packaged MSI installer to $MsiPath"
+$WixObj = Join-Path $InstallerDir "Product.wixobj"
+Invoke-Checked $candle @("-out", $WixObj, $WxsPath)
+Invoke-Checked $light @("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-out", $MsiPath, $WixObj)
+Write-Host "Packaged MemeBlip Windows bundle: $BundleDir" -ForegroundColor Green
+Write-Host "Built MSI installer: $MsiPath" -ForegroundColor Green
