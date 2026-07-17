@@ -23,8 +23,11 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`Companion request failed: ${response.status} ${detail}`);
+    const detail = (await response.text().catch(() => '')).trim();
+    if (response.status === 413) {
+      throw new Error('Audio file is too large. MemeBlip supports clips up to 20 MB.');
+    }
+    throw new Error(detail || `Companion request failed with status ${response.status}.`);
   }
 
   return response.json();
