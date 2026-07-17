@@ -7,9 +7,14 @@ on:
         description: Release version, with or without the v prefix
         required: false
         type: string
-  push:
+  pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
     tags:
       - 'v*'
 
@@ -21,7 +26,7 @@ jobs:
     if: >-
       startsWith(github.ref, 'refs/tags/') ||
       github.event_name == 'workflow_dispatch' ||
-      startsWith(github.event.head_commit.message, 'Release v')
+      (github.event_name == 'pull_request' && startsWith(github.event.pull_request.title, 'Publish v'))
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +42,8 @@ jobs:
         shell: powershell
         env:
           REQUESTED_VERSION: ${{ github.event.inputs.version }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           $packageVersion = [string](Get-Content package.json -Raw | ConvertFrom-Json).version
           $cargoText = Get-Content native/Cargo.toml -Raw
@@ -46,10 +53,18 @@ jobs:
 
           if ($env:GITHUB_REF -like 'refs/tags/*') {
             $tag = $env:GITHUB_REF_NAME
+            $target = $env:GITHUB_SHA
           } elseif ($env:REQUESTED_VERSION) {
             $tag = if ($env:REQUESTED_VERSION.StartsWith('v')) { $env:REQUESTED_VERSION } else { "v$($env:REQUESTED_VERSION)" }
+            $target = $env:GITHUB_SHA
+          } elseif ($env:PR_TITLE) {
+            $titleMatch = [regex]::Match($env:PR_TITLE, '^Publish v(\d+\.\d+\.\d+)$')
+            if (!$titleMatch.Success) { throw "Invalid release pull request title: $($env:PR_TITLE)" }
+            $tag = "v$($titleMatch.Groups[1].Value)"
+            $target = $env:PR_BASE_SHA
           } else {
             $tag = "v$packageVersion"
+            $target = $env:GITHUB_SHA
           }
 
           $releaseVersion = $tag.TrimStart('v')
@@ -59,6 +74,7 @@ jobs:
 
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "version=$releaseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "target=$target" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Set MSI version
         shell: powershell
@@ -97,7 +113,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release.outputs.tag }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ steps.release.outputs.target }}
           name: MemeBlip ${{ steps.release.outputs.tag }}
           files: release/MemeBlip-Setup.msi
           body: |
