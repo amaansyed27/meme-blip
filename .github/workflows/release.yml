@@ -98,16 +98,23 @@ jobs:
         shell: powershell
         run: npm run package:windows
 
-      - name: Verify installer exists
+      - name: Create updater-compatible installer name
+        shell: powershell
+        run: Copy-Item release\MemeBlip-Setup.msi release\MemeBlip-Windows-Setup.msi -Force
+
+      - name: Verify installers exist
         shell: powershell
         run: |
           if (!(Test-Path release\MemeBlip-Setup.msi)) { throw 'release\MemeBlip-Setup.msi was not created' }
+          if (!(Test-Path release\MemeBlip-Windows-Setup.msi)) { throw 'release\MemeBlip-Windows-Setup.msi was not created' }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: memeblip-windows-installer-${{ steps.release.outputs.version }}
-          path: release/MemeBlip-Setup.msi
+          path: |
+            release/MemeBlip-Setup.msi
+            release/MemeBlip-Windows-Setup.msi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -115,7 +122,10 @@ jobs:
           tag_name: ${{ steps.release.outputs.tag }}
           target_commitish: ${{ steps.release.outputs.target }}
           name: MemeBlip ${{ steps.release.outputs.tag }}
-          files: release/MemeBlip-Setup.msi
+          files: |
+            release/MemeBlip-Setup.msi
+            release/MemeBlip-Windows-Setup.msi
+          overwrite_files: true
           body: |
             MemeBlip ${{ steps.release.outputs.version }} fixes local sound uploads that failed for normal audio files larger than Axum's previous default multipart limit.
 
@@ -124,6 +134,7 @@ jobs:
             - multiple clips can be selected and imported sequentially
             - empty and oversized files return readable errors
             - the file picker resets correctly after an import attempt
+            - Windows-named MSI asset supports updates from earlier MemeBlip versions
 
             Install from:
             https://memeblip.dawnlightlabs.com/
