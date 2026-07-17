@@ -85,7 +85,7 @@ jobs:
           $content = Get-Content $path -Raw
           $updated = [regex]::Replace(
             $content,
-            '(?m)^\$Version = "[^"]+"$',
+            '(?m)^\$Version = "[^"]+"\r?$',
             { param($match) '$Version = "' + $env:RELEASE_VERSION + '"' }
           )
           if ($updated -eq $content) { throw 'Could not update the MSI version in package-windows.ps1.' }
