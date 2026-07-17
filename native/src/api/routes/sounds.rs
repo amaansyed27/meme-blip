@@ -1,11 +1,13 @@
 use anyhow::{anyhow, Context};
-use axum::{extract::{Multipart, Path, State}, http::HeaderMap, Json};
-use std::fs;
+use axum::{extract::{Multipart, Path}, http::HeaderMap, Json};
+use std::{fs, path::Path as FsPath};
 use uuid::Uuid;
 
 use crate::models::{AssignHotkeyRequest, ImportSoundUrlRequest, SoundClip, UpdateSoundRequest};
 
 use super::super::{auth::verify, ApiError, SharedState};
+
+const MAX_SOUND_BYTES: usize = 20 * 1024 * 1024;
 
 pub(crate) async fn list_sounds(
     State(state): State<SharedState>,
@@ -46,8 +48,16 @@ pub(crate) async fn import_sound(
         let name = field.name().unwrap_or_default().to_string();
         match name.as_str() {
             "file" => {
-                file_name = field.file_name().map(|value| value.to_string());
-                file_bytes = Some(field.bytes().await?.to_vec());
+                let original_name = field.file_name().map(|value| value.to_string());
+                let bytes = field.bytes().await?;
+                if bytes.is_empty() {
+                    return Err(anyhow!("the selected audio file is empty").into());
+                }
+                if bytes.len() > MAX_SOUND_BYTES {
+                    return Err(anyhow!("audio file is too large; max 20 MB").into());
+                }
+                file_name = original_name;
+                file_bytes = Some(bytes.to_vec());
             }
             "board" => board = field.text().await.unwrap_or_else(|_| String::from("Meme Kit")),
             "hotkey" => hotkey = field.text().await.unwrap_or_default(),
@@ -63,8 +73,9 @@ pub(crate) async fn import_sound(
         }
     }
 
-    let original = file_name.ok_or_else(|| anyhow!("missing file"))?;
-    let bytes = file_bytes.ok_or_else(|| anyhow!("missing file bytes"))?;
+    let original = file_name.ok_or_else(|| anyhow!("missing audio file name"))?;
+    let bytes = file_bytes.ok_or_else(|| anyhow!("missing audio file data"))?;
+    let board = normalized_board(board);
     let sound = persist_sound_bytes(&state, original, bytes, board, hotkey, volume)?;
     Ok(Json(state.storage.add_sound(sound)?))
 }
@@ -92,7 +103,7 @@ pub(crate) async fn import_sound_url(
     }
 
     let bytes = response.bytes().await.context("could not read remote sound bytes")?;
-    if bytes.len() > 20 * 1024 * 1024 {
+    if bytes.len() > MAX_SOUND_BYTES {
         return Err(anyhow!("remote sound is too large; max 20 MB").into());
     }
 
@@ -101,7 +112,7 @@ pub(crate) async fn import_sound_url(
         &state,
         file_name,
         bytes.to_vec(),
-        payload.board.unwrap_or_else(|| String::from("Meme Kit")),
+        normalized_board(payload.board.unwrap_or_else(|| String::from("Meme Kit"))),
         String::new(),
         payload.volume.unwrap_or(80),
     )?;
@@ -187,15 +198,16 @@ fn persist_sound_bytes(
     hotkey: String,
     volume: u8,
 ) -> Result<SoundClip, anyhow::Error> {
-    let extension = original.rsplit('.').next().unwrap_or("audio");
+    let extension = safe_extension(&original);
     let id = Uuid::new_v4().to_string();
     let stored_path = state.storage.sounds_dir().join(format!("{id}.{extension}"));
-    fs::write(&stored_path, bytes)?;
+    fs::write(&stored_path, bytes).context("could not save imported audio file")?;
 
-    let display_name = original
-        .rsplit_once('.')
-        .map(|pair| pair.0)
-        .unwrap_or(&original)
+    let display_name = FsPath::new(&original)
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("Imported sound")
         .to_string();
 
     Ok(SoundClip {
@@ -208,6 +220,20 @@ fn persist_sound_bytes(
         color: String::from("mint"),
         file_path: stored_path.to_string_lossy().to_string(),
     })
+}
+
+fn normalized_board(board: String) -> String {
+    let trimmed = board.trim();
+    if trimmed.is_empty() { String::from("Meme Kit") } else { trimmed.to_string() }
+}
+
+fn safe_extension(original: &str) -> String {
+    FsPath::new(original)
+        .extension()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty() && value.len() <= 10 && value.chars().all(|ch| ch.is_ascii_alphanumeric()))
+        .map(|value| value.to_ascii_lowercase())
+        .unwrap_or_else(|| String::from("audio"))
 }
 
 fn sanitize_file_stem(value: &str) -> String {
