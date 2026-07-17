@@ -3,9 +3,11 @@ pub mod settings;
 pub mod sounds;
 pub mod system;
 
-use axum::{routing::{get, patch, post}, Router};
+use axum::{extract::DefaultBodyLimit, routing::{get, patch, post}, Router};
 
 use super::SharedState;
+
+const MAX_REQUEST_BODY_BYTES: usize = 25 * 1024 * 1024;
 
 pub(crate) fn router() -> Router<SharedState> {
     Router::new()
@@ -36,4 +38,5 @@ pub(crate) fn router() -> Router<SharedState> {
         .route("/settings/mic-passthrough", post(settings::set_mic_passthrough))
         .route("/updates/check", get(super::check_update))
         .route("/updates/download", post(super::download_update))
+        .layer(DefaultBodyLimit::max(MAX_REQUEST_BODY_BYTES))
 }
