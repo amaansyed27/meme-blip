@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Radio, Upload } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader.jsx';
 import { SoundCard } from '../components/SoundCard.jsx';
@@ -11,12 +12,30 @@ export function Sounds() {
   const importSound = useMemeBlipStore((state) => state.importSound);
   const setRoute = useMemeBlipStore((state) => state.setRoute);
   const query = useMemeBlipStore((state) => state.query).toLowerCase();
+  const [isImporting, setIsImporting] = useState(false);
 
   const filtered = sounds.filter((sound) => {
     const matchesBoard = !activeBoard || sound.board === activeBoard;
     const matchesQuery = sound.name.toLowerCase().includes(query) || sound.board.toLowerCase().includes(query);
     return matchesBoard && matchesQuery;
   });
+
+  const handleImport = async (event) => {
+    const input = event.currentTarget;
+    const files = Array.from(input.files || []);
+    input.value = '';
+
+    if (!files.length || isImporting) return;
+
+    setIsImporting(true);
+    try {
+      for (const file of files) {
+        await importSound(file);
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   return (
     <>
@@ -27,7 +46,16 @@ export function Sounds() {
         action={(
           <div className="sound-page-actions">
             <button className="subtle-button" onClick={() => setRoute('supplier')}><Radio size={17} /> Get more</button>
-            <label className="primary-button file-button"><Upload size={18} /> Import clips<input type="file" accept="audio/*" onChange={(event) => event.target.files?.[0] && importSound(event.target.files[0])} /></label>
+            <label className="primary-button file-button" aria-disabled={isImporting}>
+              <Upload size={18} /> {isImporting ? 'Importing...' : 'Import clips'}
+              <input
+                type="file"
+                accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac"
+                multiple
+                disabled={isImporting}
+                onChange={handleImport}
+              />
+            </label>
           </div>
         )}
       />
