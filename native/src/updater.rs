@@ -26,7 +26,11 @@ pub async fn check() -> Result<UpdateStatus> {
         for asset in assets {
             let name = asset.get("name").and_then(Value::as_str).unwrap_or_default();
             let lower = name.to_lowercase();
-            if lower.contains("windows") || lower.ends_with(".exe") || lower.ends_with(".zip") {
+            if lower.contains("windows")
+                || lower.ends_with(".msi")
+                || lower.ends_with(".exe")
+                || lower.ends_with(".zip")
+            {
                 asset_name = Some(name.to_string());
                 asset_url = asset.get("browser_download_url").and_then(Value::as_str).map(ToString::to_string);
                 break;
